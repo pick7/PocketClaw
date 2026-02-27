@@ -1,0 +1,30 @@
+# 敏感文件 - 绝不提交
+.env
+secrets/*.key
+secrets/*.pem
+data/credentials/*
+
+# 加密前的明文
+*.decrypted
+
+# 运行时数据
+data/sessions/*
+data/logs/*
+
+# Docker相关
+openclaw-src/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+System Volume Information/
+.Spotlight-V100/
+.fseventsd/
+
+# 保留目录结构的占位文件
+!data/credentials/.gitkeep
+!data/sessions/.gitkeep
+!data/logs/.gitkeep
+!secrets/.gitkeep
+!config/workspace/skills/.gitkeep

@@ -1,0 +1,398 @@
+=====================================
+  PocketClaw 使用指南
+  你的便携 AI 助手
+=====================================
+
+收到文件后，把 PocketClaw 文件夹整个拷贝到 U 盘（任意 U 盘，几 GB 空间即可）。
+然后按下面的步骤操作。
+
+所有操作都支持中文提示，不需要任何编程知识。
+
+
+=====================================================================
+  一、Windows 使用指南
+=====================================================================
+
+【安装前提】
+
+  v1.0.3 已实现全自动安装，首次启动会自动检测并安装所需软件：
+  - Docker Desktop（使用 U 盘内置安装包）
+  - WSL2（Windows 子系统，Docker 运行必需）
+  - Git（源码下载和加密工具）
+  - Docker 镜像加速器（国内网络自动配置）
+
+  你只需要：
+  - Windows 10 或更新版本
+  - 一个智谱 AI 的 API Key（免费申请：https://bigmodel.cn）
+
+  提示：首次安装 WSL2 后可能需要重启电脑一次，重启后再次运行即可。
+
+
+【首次使用】
+
+  方式一（推荐）：统一启动器
+    1. 插入 U 盘
+    2. 打开 U 盘中的 PocketClaw 文件夹
+    3. 双击 PocketClaw.bat
+    4. 在菜单中选择 [1] 启动
+       - 首次会自动引导你运行配置向导（全中文提问）
+       - 第 1 步：输入 API Key（智谱免费申请）
+       - 第 2 步：设置 Master Password 并自动加密保护
+    5. 输入你设置的 Master Password（加密密码）
+    6. 等待容器启动（首次约 3-5 分钟）
+    7. 浏览器自动打开聊天界面
+       - 官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
+       - 中文界面: 打开 U 盘中的 frontend\index.html
+
+  方式二：手动分步操作
+    1. 双击 scripts\setup-env.bat  → 配置向导
+    2. 双击 scripts\encrypt.bat    → 设置加密密码
+    3. 双击 scripts\start.bat      → 启动服务
+
+
+【日常使用】
+
+  启动：插入 U 盘 → 双击 PocketClaw.bat → 选 [1] → 输入密码 → 等几秒
+  使用：浏览器打开下面任一地址——
+       官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
+       中文界面: 打开 U 盘中 frontend\index.html
+  停止：回到 PocketClaw.bat 菜单 → 选 [2]（或双击 scripts\stop.bat）
+  拔盘：等提示"可以安全拔出" → 系统托盘安全弹出 → 拔出
+
+
+【改配置】
+
+  换 API Key    → 双击 scripts\change-api.bat
+  脚本会自动解密→引导输入→重新加密→可选重启。
+
+
+【Windows 脚本速查】
+
+  PocketClaw.bat              统一菜单启动器（推荐入口）
+  scripts\setup-env.bat     首次配置向导
+  scripts\encrypt.bat       加密 .env
+  scripts\decrypt.bat       解密 .env
+  scripts\start.bat         启动服务
+  scripts\stop.bat          停止服务
+  scripts\change-api.bat    更换 API Key
+  scripts\status.bat        查看运行状态
+  scripts\logs.bat          查看日志
+  scripts\backup.bat        备份到本地电脑
+  scripts\reset.bat         完全重置
+  scripts\update.bat        检查更新
+  scripts\install-update.bat  安装更新包
+
+
+=====================================================================
+  二、macOS 使用指南
+=====================================================================
+
+【安装前提（只需做一次）】
+
+  1. 安装 Docker Desktop
+     命令行方式（推荐）：打开"终端"，输入：
+       brew install --cask docker
+     手动方式：https://www.docker.com/products/docker-desktop/ 下载安装
+     安装后在"应用程序"中打开 Docker，等待它启动完成。
+
+  2. 验证安装
+     打开终端输入：
+       docker --version
+       docker compose version
+
+  提示：OpenSSL macOS 系统自带，Docker 镜像加速器会在启动时自动配置，无需手动操作。
+
+
+【首次使用】
+
+  方式一（推荐）：统一启动器
+    1. 插入 U 盘
+    2. 打开 U 盘中的 PocketClaw 文件夹
+    3. 双击 PocketClaw.command
+       （首次可能提示"无法验证开发者"，右键点击 → 选择"打开"即可）
+    4. 在菜单中选择 [1] 启动
+       - 首次会自动引导你运行配置向导（全中文提问）
+    5. 输入 Master Password
+    6. 等待容器启动
+    7. 浏览器自动打开聊天界面
+       - 官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
+       - 中文界面: 打开 U 盘中的 frontend/index.html
+
+  方式二：手动分步操作（在终端中运行）
+    1. cd /Volumes/你的U盘/PocketClaw
+    2. bash scripts/setup-env.sh      → 配置向导
+    3. bash scripts/encrypt-secrets.sh → 加密
+    4. bash scripts/start.sh           → 启动
+
+
+【日常使用】
+
+  启动：插入 U 盘 → 双击 PocketClaw.command → 选 [1] → 输入密码
+  使用：浏览器打开下面任一地址——
+       官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
+       中文界面: 打开 U 盘中 frontend/index.html
+  停止：回到菜单 → 选 [2]（或终端运行 bash scripts/stop.sh）
+  拔盘：等提示后 → 在 Finder 侧边栏点击 U 盘旁的弹出按钮 → 拔出
+
+  小提示：macOS 会在 U 盘上生成隐藏文件（._开头、.DS_Store 等），
+  这些对功能没有影响。可以在菜单中选 [8] 清理。
+
+
+【macOS 脚本速查】
+
+  PocketClaw.command                  统一菜单启动器（推荐入口）
+  bash scripts/setup-env.sh        首次配置向导
+  bash scripts/encrypt-secrets.sh  加密 .env
+  bash scripts/decrypt-secrets.sh  解密 .env
+  bash scripts/start.sh            启动服务
+  bash scripts/stop.sh             停止服务
+  bash scripts/backup.sh           备份到本地电脑
+  bash scripts/install-update.sh   安装更新包
+
+
+=====================================================================
+  三、Linux 使用指南
+=====================================================================
+
+【安装前提（只需做一次）】
+
+  1. 安装 Docker
+     打开终端输入：
+       curl -fsSL https://get.docker.com | sh
+       sudo usermod -aG docker $USER
+     然后注销重新登录（使 docker 组权限生效）。
+
+  2. 安装 OpenSSL（通常已预装）
+       sudo apt install openssl       # Debian/Ubuntu
+       sudo yum install openssl       # CentOS/RHEL
+
+  3. 验证安装
+       docker --version
+       docker compose version
+
+  提示：Docker 镜像加速器会在首次启动时自动检测并配置（如 Docker Hub 不可达）。
+  如自动配置不生效，可手动编辑 /etc/docker/daemon.json，添加：
+    {"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me"]}
+  然后运行: sudo systemctl restart docker
+
+
+【首次使用】
+
+  1. 插入 U 盘，挂载后进入目录
+       cd /media/$USER/你的U盘/PocketClaw
+  2. 运行配置向导
+       bash scripts/setup-env.sh
+  3. 加密配置
+       bash scripts/encrypt-secrets.sh
+  4. 启动服务
+       bash scripts/start.sh
+  5. 浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+
+
+【日常使用】
+
+  启动：bash scripts/start.sh → 输入密码 → 等几秒
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+  停止：bash scripts/stop.sh
+  拔盘：umount /media/$USER/你的U盘 → 拔出
+
+
+【Linux 脚本速查】
+
+  bash scripts/setup-env.sh        首次配置向导
+  bash scripts/encrypt-secrets.sh  加密 .env
+  bash scripts/decrypt-secrets.sh  解密 .env
+  bash scripts/start.sh            启动服务
+  bash scripts/stop.sh             停止服务
+  bash scripts/backup.sh           备份到本地
+  bash scripts/install-update.sh   安装更新包
+
+=====================================================================
+  四、注意事项
+=====================================================================
+
+【加密保护】
+
+  你的 API Key、密码、Token 等敏感信息存储在 .env 文件中。
+  加密方式：AES-256-CBC + PBKDF2（100,000次迭代），银行级标准。
+  加密后生成 secrets/.env.encrypted，U 盘上只保存密文。
+  没有 Master Password 无法还原。
+
+  Master Password 注意：
+  - 必须牢记！丢失 = 丢失所有配置，无法恢复
+  - 不要写在 U 盘上的任何文件中
+  - 建议记在密码管理器里（如 Bitwarden、1Password）
+  - 至少 12 位，混合大小写字母+数字+符号
+
+
+【U 盘弹出安全】
+
+  错误做法：直接拔出 U 盘
+  正确做法：先停止服务 → 等待提示 → 安全弹出 → 拔出
+
+  为什么不能直接拔？
+  - Docker 容器正在读写 U 盘上的文件
+  - 强制拔出可能导致：会话数据损坏、配置损坏、加密文件损坏
+
+  忘记停止就拔了？
+  重新插入 → 运行 stop 脚本 → 检查 secrets/.env.encrypted 文件大小不为 0
+
+
+【安全须知】
+
+  物理安全：
+  - 不要把 U 盘长时间插在公共电脑上
+  - 不要在不受信任的电脑上使用（可能有键盘记录器）
+  - U 盘丢失后立即更换所有 API Key 和密码
+
+  软件安全：
+  - 密码通过管道传递，不在进程列表中显示
+  - 容器端口 18789 仅绑定本机（127.0.0.1），同网络设备无法访问
+  - 明文 .env 启动后自动用随机数据覆写再删除
+  - 容器安全加固：cap_drop ALL、pids_limit 128、mem_limit 2g
+
+
+【不要做的事】
+
+  1. 不要手动编辑 .env 文件 — 用 change-*.bat 脚本
+  2. 不要把 Master Password 写在 U 盘上
+  3. 不要在运行中直接拔 U 盘
+  4. 不要把 U 盘格式化为 NTFS — 保持 ExFAT 以兼容 macOS
+  5. 不要删除 scripts/ 目录
+  6. 不要删除 config/ 目录
+  7. 不要在公共电脑上使用后忘记停止服务
+  8. 不要删除根目录的 PocketClaw.bat / PocketClaw.command
+
+
+=====================================================================
+  五、常见问题（FAQ）
+=====================================================================
+
+  Q1: 提示 "docker not found"
+  → Docker Desktop 未安装或未加入 PATH。重新安装 Docker Desktop。
+
+  Q2: 提示 "Docker Desktop 未运行"
+  → 在任务栏找到 Docker 图标，右键 → 启动。
+    或搜索 "Docker Desktop" 打开后再试。
+
+  Q3: 首次启动很慢（超过 5 分钟）
+  → 首次需要下载源码和构建镜像，属于正常现象。后续启动只需 10-30 秒。
+  → 如果 U 盘是 USB 2.0 会更慢，建议使用 USB 3.0 接口。
+
+  Q4: 访问 http://127.0.0.1:18789 无响应
+  → 运行状态查看脚本（Windows: scripts\status.bat）
+  → 运行日志脚本查看错误（Windows: scripts\logs.bat）
+  → 确认 18789 端口未被其他程序占用
+  → 确认 Docker Desktop 已启动且容器状态为 Running
+
+  Q4.5: 页面能打开但显示 "unauthorized" 或 "token missing"
+  → 官方界面：确保 URL 末尾带有 #token=pocketclaw
+     完整地址: http://127.0.0.1:18789/chat#token=pocketclaw
+  → 中文界面：打开前端 frontend/index.html，默认 Token 已内置
+     如仍报错，点击设置(⚙) → Auth Token 填入 pocketclaw → 保存
+
+  Q4.6: 中文前端显示 "invalid connect params"
+  → 前端版本与 OpenClaw 协议不匹配
+  → 按 Ctrl+F5 强制刷新页面（清除浏览器缓存）
+  → 如仍不行，清空浏览器 localStorage（按 F12 → Console → 输入
+     localStorage.clear()，回车后刷新页面）
+
+  Q5: 忘记 Master Password
+  → 无法恢复。只能删除 secrets/.env.encrypted，
+    重新运行配置向导（setup-env 脚本）重新输入全部信息。
+
+  Q6: 启动时报 "connection timeout" 或 "auth.docker.io" 错误
+  → 国内网络无法直接访问 Docker Hub。
+  → v1.0.3 启动脚本会自动检测并配置镜像加速器。
+  → 如果自动配置未生效，可手动配置：
+    Windows/macOS: Docker Desktop → Settings → Docker Engine，
+    在 JSON 最后一个 } 之前加上（注意前面的逗号）：
+      ,
+      "registry-mirrors": [
+        "https://docker.1ms.run",
+        "https://docker.xuanyuan.me"
+      ]
+    Linux: 编辑 /etc/docker/daemon.json 添加同样内容，
+    然后 sudo systemctl restart docker。
+
+  Q7: 想要完全重置
+  → Windows: 运行 scripts\reset.bat，输入 YES 确认。
+  → 这会删除所有数据但保留脚本和配置模板。
+
+  Q8: API 报余额不足
+  → 登录智谱开放平台充值（GLM-4.7-Flash 为免费模型，一般不会遇到）：
+    智谱: https://open.bigmodel.cn/
+
+  Q9: U 盘上出现很多隐藏文件（._ 开头、.DS_Store 等）
+  → 这是 macOS 自动生成的系统文件，全部可以安全删除，不影响功能。
+  → 常见的有：._文件名、.DS_Store、.Spotlight-V100、.Trashes、.fseventsd
+  → 清理方法：macOS 下双击 PocketClaw.command，选菜单 [8] 清理。
+  → 预防 .DS_Store：在 macOS 终端执行以下命令（只需一次）：
+    defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+  → ._文件（资源分支文件）暂时无法完全禁止，定期清理即可。
+
+  Q10: 需要代理才能访问外网
+  → start 脚本启动时会自动询问是否需要代理。
+  → 默认代理地址：http://127.0.0.1:7897
+
+=====================================================================
+PocketClaw v1.0.5 | 最后更新: 2026-02-27
+=====================================================================
+
+
+=====================================================================
+  六、故障自助排除指南
+=====================================================================
+
+  遇到错误时，按以下步骤逐一排查：
+
+  【第 1 步：检查 Docker 是否在运行】
+
+    Windows: 在任务栏右下角看是否有 Docker 鲸鱼图标
+    macOS:   在顶部菜单栏看是否有 Docker 图标
+    命令行:  docker info
+    → 如果报错，启动 Docker Desktop 后再试
+
+  【第 2 步：检查容器是否正常】
+
+    运行: docker ps
+    → 应看到 pocketclaw 容器 STATUS 为 "Up ..."
+    → 如果没有，运行 docker ps -a 看是否处于 Exited/Restarting 状态
+    → Exited: 运行 docker logs pocketclaw 查看退出原因
+    → Restarting: 可能是配置错误，查看日志定位问题
+
+  【第 3 步：查看日志】
+
+    Windows: 双击 scripts\logs.bat
+    其他:    docker logs pocketclaw
+    → 关注以下关键词：
+      "MissingEnvVarError"  → .env 缺少必要变量，重新运行 setup-env
+      "EBUSY"              → U 盘文件锁定，停止容器后重试
+      "Config overwrite"   → OpenClaw 自动覆盖了配置（正常现象）
+      "listening on ws://" → 这条说明启动成功了
+
+  【第 4 步：检查浏览器端】
+
+    1. 按 F12 打开开发者工具 → Console 标签页
+    2. 查看红色错误消息
+    3. 常见问题：
+       - "token_missing" → URL 缺少 #token=pocketclaw
+       - "invalid connect params" → 按 Ctrl+F5 强制刷新
+       - "WebSocket connection failed" → 容器未启动或端口被占用
+
+  【第 5 步：重置大法】
+
+    如果以上都无法解决：
+    1. 停止容器: docker compose down
+    2. 删除旧镜像: docker rmi pocketclaw-pocketclaw
+    3. 重新构建: docker compose build --no-cache
+    4. 重新启动: docker compose up -d
+    → 等待 3-5 分钟后再访问
+
+  【紧急联系】
+
+    如果自助排除无法解决，请：
+    1. 运行 docker logs pocketclaw > pocketclaw-log.txt 2>&1
+    2. 把 pocketclaw-log.txt 发给技术支持
+    3. 说明：操作系统版本、Docker 版本、报错截图
+=====================================================================

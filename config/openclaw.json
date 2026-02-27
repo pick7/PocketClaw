@@ -1,0 +1,58 @@
+{
+  "agents": {
+    "defaults": {
+      "model": "openai/glm-4.7-flash"
+    }
+  },
+  "models": {
+    "providers": {
+      "openai": {
+        "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "glm-z1-flash",
+            "name": "GLM-Z1 Flash (推理)",
+            "input": ["text"],
+            "contextWindow": 128000,
+            "maxTokens": 16384,
+            "compat": {}
+          },
+          {
+            "id": "glm-4-flash",
+            "name": "GLM-4 Flash",
+            "input": ["text"],
+            "contextWindow": 128000,
+            "maxTokens": 4096,
+            "compat": {}
+          },
+          {
+            "id": "glm-4.7-flash",
+            "name": "GLM-4.7 Flash (旗舰免费)",
+            "input": ["text"],
+            "contextWindow": 200000,
+            "maxTokens": 128000,
+            "compat": {}
+          }
+        ]
+      }
+    }
+  },
+  "gateway": {
+    "port": 18789,
+    "bind": "lan",
+    "mode": "local",
+    "controlUi": {
+      "allowedOrigins": ["http://127.0.0.1:18789", "http://localhost:18789", "null", "*"],
+      "allowInsecureAuth": true,
+      "dangerouslyDisableDeviceAuth": true
+    },
+    "auth": {
+      "mode": "token",
+      "token": "pocketclaw"
+    }
+  },
+  "browser": {
+    "enabled": false
+  }
+}

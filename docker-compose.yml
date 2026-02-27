@@ -1,0 +1,39 @@
+services:
+  pocketclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.custom
+    container_name: pocketclaw
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18789:18789"
+    volumes:
+      - ./config/workspace:/home/node/.openclaw/workspace
+      - ./data/credentials:/home/node/.openclaw/credentials
+      - ./data/sessions:/home/node/.openclaw/sessions
+      - ./data/logs:/home/node/.openclaw/logs
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${ZHIPU_API_KEY:-not-configured-yet}
+      - OPENCLAW_MODEL=${OPENCLAW_MODEL:-openai/glm-4.7-flash}
+    networks:
+      - pocketclaw-net
+
+    # ── 安全加固 ──
+    security_opt:
+      - no-new-privileges:true           # 禁止容器内提权
+    cap_drop:
+      - ALL                              # 丢弃所有 Linux capabilities
+    cap_add:
+      - NET_BIND_SERVICE                 # 仅保留端口绑定能力
+    mem_limit: 2g                        # 内存上限 2GB，防止内存耗尽攻击
+    pids_limit: 128                      # 进程数上限，防止 fork 炸弹
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid     # 临时目录: 禁止执行、禁止 setuid
+
+networks:
+  pocketclaw-net:
+    driver: bridge

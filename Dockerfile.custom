@@ -1,0 +1,47 @@
+# PocketClaw Dockerfile
+# 通过 npm 安装 OpenClaw，无需克隆源码，构建更快更稳定
+
+FROM node:22-slim
+
+WORKDIR /app
+
+# 使用国内 Debian 镜像源（解决 deb.debian.org 在国内不稳定的问题）
+RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+    sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true
+
+# 安装系统依赖（最小化安装，减少攻击面）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    openssl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 OpenClaw（使用淘宝 npm 镜像加速）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g openclaw@latest
+
+# ── 使用内置 node 用户（安全加固: 非 root） ──
+RUN mkdir -p /home/node/.openclaw/workspace \
+             /home/node/.openclaw/credentials \
+             /home/node/.openclaw/sessions \
+             /home/node/.openclaw/logs \
+             /home/node/.openclaw/canvas \
+             /home/node/.openclaw/cron \
+    && chown -R node:node /home/node/.openclaw
+
+# 缓存破坏参数（更改配置后用 --build-arg CACHE_DATE=$(date +%s) 强制刷新后续层）
+ARG CACHE_DATE=0
+
+# 将配置文件 COPY 到镜像内（避免 ExFAT USB 上 bind mount 的 EBUSY 问题）
+COPY --chown=node:node config/openclaw.json /home/node/.openclaw/openclaw.json
+
+# 将中文前端 COPY 到 canvas 目录（通过 http://127.0.0.1:18789/__openclaw__/canvas/ 访问）
+COPY --chown=node:node frontend/ /home/node/.openclaw/canvas/
+
+USER node
+
+EXPOSE 18789
+
+# 启动 Gateway
+CMD ["openclaw", "gateway", "--port", "18789", "--verbose"]
