@@ -15,7 +15,7 @@ echo ============================================
 echo.
 
 :: 步骤1：停止容器（支持 docker compose v1/v2）
-echo [1/4] 停止 Docker 容器...
+echo [1/5] 停止 Docker 容器...
 docker compose -f "%PROJECT_DIR%\docker-compose.yml" down 2>nul || docker-compose -f "%PROJECT_DIR%\docker-compose.yml" down 2>nul
 if !ERRORLEVEL! equ 0 (
     echo       容器已停止
@@ -24,8 +24,8 @@ if !ERRORLEVEL! equ 0 (
 )
 echo.
 
-:: 步骤2：安全擦除 .env（先覆写再删除，ExFAT 下也尽量覆盖扇区）
-echo [2/4] 安全清除临时凭证...
+:: 步骤2：安全擦除 .env（先覆写再删除）
+echo [2/5] 安全清除临时凭证...
 if exist "%PROJECT_DIR%\.env" (
     powershell -NoProfile -Command "$f='%PROJECT_DIR%\.env'; if(Test-Path $f){$s=(Get-Item $f).Length; $r=New-Object byte[] $s; (New-Object System.Security.Cryptography.RNGCryptoServiceProvider).GetBytes($r); [IO.File]::WriteAllBytes($f,$r)}" 2>nul
     del /q "%PROJECT_DIR%\.env"
@@ -36,7 +36,7 @@ if exist "%PROJECT_DIR%\.env" (
 echo.
 
 :: 步骤3：关闭所有 Docker 相关进程
-echo [3/4] 关闭 Docker Desktop...
+echo [3/5] 关闭 Docker Desktop...
 taskkill /F /IM "Docker Desktop.exe" >nul 2>&1
 taskkill /F /IM "com.docker.backend.exe" >nul 2>&1
 taskkill /F /IM "com.docker.build.exe" >nul 2>&1
@@ -47,8 +47,22 @@ timeout /t 2 /nobreak >nul
 echo       Docker 进程已关闭
 echo.
 
-:: 步骤4：离开U盘目录（避免锁定USB）
-echo [4/4] 离开U盘目录...
+:: 步骤4：关闭 WSL 并清理占用U盘的句柄
+echo [4/5] 关闭 WSL 并释放U盘句柄...
+REM 关闭 WSL 后端（Docker Desktop 使用 WSL2 引擎）
+wsl --shutdown >nul 2>&1
+timeout /t 2 /nobreak >nul
+REM 杀掉所有可能占用U盘的 wsl/wslhost/dllhost 进程
+taskkill /F /IM "wsl.exe" >nul 2>&1
+taskkill /F /IM "wslhost.exe" >nul 2>&1
+REM dllhost 可能是缩略图缓存
+powershell -NoProfile -Command "Get-Process dllhost -ErrorAction SilentlyContinue | ForEach-Object { $_.Kill() }" >nul 2>&1
+timeout /t 1 /nobreak >nul
+echo       WSL 已关闭，句柄已释放
+echo.
+
+:: 步骤5：离开U盘目录
+echo [5/5] 离开U盘目录...
 cd /d "%SystemDrive%\"
 echo       当前目录已切到 %SystemDrive%\
 echo.
