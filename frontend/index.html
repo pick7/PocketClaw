@@ -832,8 +832,11 @@ const Gateway = {
       this.ws.close();
     }
     StatusBar.set('connecting', '正在连接...');
+    // 将 authToken 追加到 URL 路径（OpenClaw 网关要求密码在路径中）
+    let wsUrl = this.url.replace(/\/+$/, '');
+    if (this.authToken) wsUrl += '/' + this.authToken;
     try {
-      this.ws = new WebSocket(this.url);
+      this.ws = new WebSocket(wsUrl);
     } catch(e) {
       StatusBar.set('disconnected', '连接失败: 地址无效');
       return;

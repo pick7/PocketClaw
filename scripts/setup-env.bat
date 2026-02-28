@@ -78,6 +78,9 @@ echo.
 echo # -- 智谱 AI (GLM-4.7-Flash 永久免费^) --
 echo ZHIPU_API_KEY=!GLM_KEY!
 echo.
+echo # -- Gateway 认证密码 --
+echo GATEWAY_AUTH_PASSWORD=pocketclaw
+echo.
 ) > "%ENV_FILE%"
 
 echo.

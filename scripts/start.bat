@@ -175,13 +175,23 @@ powershell -NoProfile -Command "$f=\"$env:USERPROFILE\.docker\daemon.json\"; if(
 if !ERRORLEVEL! equ 0 goto :mirrors_ok
 
 echo [信息] 未检测到镜像加速器，正在自动配置（国内加速 Docker 下载）...
-powershell -NoProfile -Command ^
-    "$daemonFile = \"$env:USERPROFILE\.docker\daemon.json\"; " ^
-    "$dir = Split-Path $daemonFile; if(!(Test-Path $dir)){New-Item -Path $dir -ItemType Directory -Force | Out-Null}; " ^
-    "$cfg = @{}; if(Test-Path $daemonFile){try{$cfg = Get-Content $daemonFile -Raw | ConvertFrom-Json -AsHashtable}catch{$cfg=@{}}}; " ^
-    "$cfg['registry-mirrors'] = @('https://docker.1ms.run','https://docker.xuanyuan.me'); " ^
-    "$cfg | ConvertTo-Json -Depth 10 | Set-Content $daemonFile -Encoding UTF8; " ^
-    "Write-Host '[OK] 镜像加速器已配置'"
+set "MIRROR_PS1=%TEMP%\pc_mirror.ps1"
+echo $f = Join-Path $env:USERPROFILE '.docker\daemon.json' > "!MIRROR_PS1!"
+echo $d = Split-Path $f >> "!MIRROR_PS1!"
+echo if(!(Test-Path $d)){New-Item $d -ItemType Directory -Force ^| Out-Null} >> "!MIRROR_PS1!"
+echo $j = '{}' >> "!MIRROR_PS1!"
+echo if(Test-Path $f){$j = Get-Content $f -Raw} >> "!MIRROR_PS1!"
+echo try{$o = $j ^| ConvertFrom-Json}catch{$o = New-Object PSObject} >> "!MIRROR_PS1!"
+echo $m = @('https://docker.1ms.run','https://docker.xuanyuan.me') >> "!MIRROR_PS1!"
+echo $o ^| Add-Member -NotePropertyName 'registry-mirrors' -NotePropertyValue $m -Force >> "!MIRROR_PS1!"
+echo $o ^| ConvertTo-Json -Depth 10 ^| Set-Content $f -Encoding UTF8 >> "!MIRROR_PS1!"
+powershell -NoProfile -ExecutionPolicy Bypass -File "!MIRROR_PS1!"
+if !ERRORLEVEL! equ 0 (
+    echo [OK] 镜像加速器已配置
+) else (
+    echo [警告] 镜像加速器配置失败，将尝试继续...
+)
+del "!MIRROR_PS1!" 2>nul
 echo [信息] 正在重启 Docker Desktop 以应用加速器...
 powershell -NoProfile -Command "Get-Process -Name 'Docker Desktop','com.docker.backend','com.docker.build','docker-sandbox' -ErrorAction SilentlyContinue | Stop-Process -Force"
 timeout /t 3 /nobreak >nul
@@ -267,6 +277,23 @@ if not exist "%PROJECT_DIR%\.env" (
 echo [OK] 配置文件就绪
 echo.
 
+:: ── 如果 .env 存在但尚未加密，提示设置 Master Password ──
+if not exist "!ENC_FILE!" (
+    echo [信息] 检测到未加密的配置文件。
+    echo        为了保护你的 API Key，建议设置 Master Password。
+    echo.
+    set /p "ENCRYPT_NOW=  是否现在设置密码加密？(Y/n): "
+    if /i not "!ENCRYPT_NOW!"=="n" (
+        call "%PROJECT_DIR%\scripts\encrypt.bat"
+        if exist "!ENC_FILE!" (
+            echo [OK] 加密完成！
+        )
+    ) else (
+        echo [信息] 已跳过加密，配置文件将以明文保存在U盘上。
+    )
+    echo.
+)
+
 :: ── Docker Hub 连通性检测（镜像加速器已在前面配置）──
 echo [信息] 正在检测 Docker Hub 连通性...
 docker pull --quiet hello-world >nul 2>&1
@@ -343,8 +370,8 @@ echo ============================================
 echo   [OK] PocketClaw 已成功启动！
 echo ============================================
 echo.
-echo   控制面板: http://127.0.0.1:18789
-echo   WebChat:  http://127.0.0.1:18789/chat
+echo   控制面板: http://127.0.0.1:18789/pocketclaw
+echo   WebChat:  http://127.0.0.1:18789/pocketclaw
 echo.
 echo   停止服务: scripts\stop.bat
 echo   查看日志: scripts\logs.bat
@@ -367,11 +394,11 @@ goto :open_chinese
 :open_both
 explorer.exe "%PROJECT_DIR%\frontend\index.html"
 timeout /t 2 /nobreak >nul
-start "" "http://127.0.0.1:18789"
+start "" "http://127.0.0.1:18789/pocketclaw"
 goto :skip_browser
 
 :open_original
-start "" "http://127.0.0.1:18789"
+start "" "http://127.0.0.1:18789/pocketclaw"
 goto :skip_browser
 
 :open_chinese
