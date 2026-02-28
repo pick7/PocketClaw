@@ -206,6 +206,25 @@ fi
 echo "[OK] 配置文件就绪"
 echo ""
 
+# ── 清理 .env 中的非 UTF-8 字节（防止 GBK 中文注释导致 docker --env-file 报错）──
+if [ -f "$PROJECT_DIR/.env" ]; then
+    # 最可靠的方式：去掉 CRLF，然后只保留非注释非空行（KEY=VALUE 格式）
+    # Docker 的 --env-file 不需要注释，GBK 注释会导致 invalid utf8 报错
+    # LC_ALL=C 确保 macOS 上不会因非 UTF-8 字节报 "Illegal byte sequence"
+    LC_ALL=C tr -d '\r' < "$PROJECT_DIR/.env" \
+        | LC_ALL=C grep -v '^[[:space:]]*#' \
+        | LC_ALL=C grep -v '^[[:space:]]*$' \
+        > "$PROJECT_DIR/.env.clean" 2>/dev/null
+    if [ -s "$PROJECT_DIR/.env.clean" ]; then
+        mv "$PROJECT_DIR/.env.clean" "$PROJECT_DIR/.env"
+        echo "[OK] .env 已清理（移除注释和空行）"
+    else
+        # 清理后为空说明出了问题，保留原文件
+        rm -f "$PROJECT_DIR/.env.clean"
+        echo "[警告] .env 清理异常，保留原文件"
+    fi
+fi
+
 # ── 检查/配置 Docker 镜像加速器 ──
 DAEMON_JSON="$HOME/.docker/daemon.json"
 MIRRORS_OK=0
@@ -314,9 +333,20 @@ fi
 echo "[OK] 镜像构建完成"
 
 # ── 第二步：启动容器 ──
-# 先清理孤立容器和旧容器
+# 彻底清理所有 pocketclaw 相关容器（包括幽灵容器）和网络
+echo "[..] 清理旧容器..."
 run_compose -f "$PROJECT_DIR/docker-compose.yml" down --remove-orphans >> "$BUILD_LOG" 2>&1 || true
-docker rm -f pocketclaw >> "$BUILD_LOG" 2>&1 || true
+# 清理所有名称含 pocketclaw 的容器（包括 <hash>_pocketclaw 等幽灵容器）
+for cid in $(docker ps -aq --filter "name=pocketclaw" 2>/dev/null); do
+    docker rm -f "$cid" >> "$BUILD_LOG" 2>&1 || true
+done
+# 清理任何使用 pocketclaw 镜像但名称不匹配的容器
+for cid in $(docker ps -aq --filter "ancestor=pocketclaw-pocketclaw:latest" 2>/dev/null); do
+    docker rm -f "$cid" >> "$BUILD_LOG" 2>&1 || true
+done
+# 清理可能残留的网络
+docker network rm pocketclaw_pocketclaw-net >> "$BUILD_LOG" 2>&1 || true
+docker network rm pocketclaw_default >> "$BUILD_LOG" 2>&1 || true
 
 # 尝试 docker compose up
 run_compose -f "$PROJECT_DIR/docker-compose.yml" up -d >> "$BUILD_LOG" 2>&1 || true
