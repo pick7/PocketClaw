@@ -78,7 +78,7 @@ if !ERRORLEVEL! neq 0 (
 
         echo   [状态] PocketClaw 运行中 - !OC_STATUS!
 
-        echo   [地址] http://127.0.0.1:18789/pocketclaw
+        echo   [地址] http://127.0.0.1:18789/#token=pocketclaw
 
     )
 
@@ -196,7 +196,7 @@ REM ============================================================
 
 :do_open
 
-start "" "http://127.0.0.1:18789/pocketclaw"
+start "" "http://127.0.0.1:18789/#token=pocketclaw"
 
 timeout /t 1 >nul
 

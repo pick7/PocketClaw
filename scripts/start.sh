@@ -279,12 +279,16 @@ if [ "$BUILD_OK" -ne 0 ]; then
 fi
 echo "[OK] 构建完成！"
 
+# ── 读取 Gateway Token（用于浏览器自动认证）──
+GATEWAY_TOKEN="${GATEWAY_AUTH_PASSWORD:-pocketclaw}"
+DASHBOARD_URL="http://127.0.0.1:18789/#token=${GATEWAY_TOKEN}"
+
 echo ""
 echo "============================================"
 echo "  [OK] PocketClaw 已成功启动！"
 echo "============================================"
 echo ""
-echo "  打开界面: http://127.0.0.1:18789/pocketclaw"
+echo "  打开界面: $DASHBOARD_URL"
 
 
 # ── 清理明文 ──
@@ -293,9 +297,9 @@ if [ -f "$ENC_FILE" ]; then
     echo "[安全] 明文配置已安全擦除"
 fi
 
-# 打开浏览器
+# 打开浏览器（URL含token，自动完成认证）
 if command -v open &>/dev/null; then
-    open "http://127.0.0.1:18789/pocketclaw"
+    open "$DASHBOARD_URL"
 elif command -v xdg-open &>/dev/null; then
-    xdg-open "http://127.0.0.1:18789/pocketclaw"
+    xdg-open "$DASHBOARD_URL"
 fi
