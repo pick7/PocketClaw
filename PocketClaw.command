@@ -69,8 +69,7 @@ show_menu() {
     echo "    [2]  停止 PocketClaw（拔U盘前必须先停止）"
     echo "    [3]  打开聊天页面"
     echo "    [4]  切换模型/API Key"
-    echo "    [5]  查看状态 / 日志"
-    echo "    [6]  备份数据"
+    echo "    [5]  备份数据"
     echo ""
     echo "    [0]  退出"
     echo ""
@@ -113,21 +112,6 @@ do_change_api() {
     read -rp "  按回车返回菜单..." _
 }
 
-do_status() {
-    echo ""
-    echo -e "  ${BOLD}============================================${RESET}"
-    echo -e "       ${BOLD}PocketClaw 状态${RESET}"
-    echo -e "  ${BOLD}============================================${RESET}"
-    echo ""
-    docker ps --filter "name=pocketclaw" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "  Docker 未运行"
-    echo ""
-    echo -e "  ${CYAN}[信息] 最近 30 行日志:${RESET}"
-    echo ""
-    docker logs pocketclaw --tail 30 2>/dev/null || echo "  容器未运行"
-    echo ""
-    read -rp "  按回车返回菜单..." _
-}
-
 do_backup() {
     echo ""
     bash "$PROJECT_DIR/scripts/backup.sh"
@@ -140,14 +124,13 @@ do_backup() {
 # ============================================================
 while true; do
     show_menu
-    read -rp "  请选择 [0-6]: " CHOICE
+    read -rp "  请选择 [0-5]: " CHOICE
     case "$CHOICE" in
         1) do_start ;;
         2) do_stop ;;
         3) do_open ;;
         4) do_change_api ;;
-        5) do_status ;;
-        6) do_backup ;;
+        5) do_backup ;;
         0) echo ""; echo "  再见！"; exit 0 ;;
         *) echo "  无效选择"; sleep 1 ;;
     esac
