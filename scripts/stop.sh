@@ -34,6 +34,28 @@ fi
 
 sleep 2
 
+# 4. 清理 macOS 在 NTFS U盘上生成的隐藏文件（防止 Windows 端显示）
+if [[ "$(uname)" == "Darwin" ]]; then
+    USB_ROOT=""
+    # 检测 PROJECT_DIR 是否在外部卷上
+    case "$PROJECT_DIR" in
+        /Volumes/*)
+            USB_ROOT=$(echo "$PROJECT_DIR" | sed 's|^\(/Volumes/[^/]*\).*|\1|')
+            ;;
+    esac
+    if [ -n "$USB_ROOT" ]; then
+        echo "[信息] 正在清理 macOS 隐藏文件..."
+        find "$USB_ROOT" -maxdepth 1 -name ".DS_Store" -delete 2>/dev/null || true
+        find "$USB_ROOT" -name ".DS_Store" -delete 2>/dev/null || true
+        find "$USB_ROOT" -name "._*" -delete 2>/dev/null || true
+        rm -rf "$USB_ROOT/.fseventsd" 2>/dev/null || true
+        rm -rf "$USB_ROOT/.Spotlight-V100" 2>/dev/null || true
+        rm -rf "$USB_ROOT/.Trashes" 2>/dev/null || true
+        rm -f "$USB_ROOT/.metadata_never_index" 2>/dev/null || true
+        echo "[OK] macOS 隐藏文件已清理"
+    fi
+fi
+
 echo ""
 echo "[OK] PocketClaw 已停止"
 echo ""

@@ -16,7 +16,6 @@ if errorlevel 1 (
 )
 
 :menu
-
 cls
 echo.
 echo   ============================================
@@ -33,7 +32,7 @@ if !ERRORLEVEL! neq 0 (
     set /p OC_STATUS=<"%TEMP%\oc_status.tmp" 2>nul
     del /q "%TEMP%\oc_status.tmp" 2>nul
     if "!OC_STATUS!"=="" (
-        echo   [状态] PocketClaw 未启动
+        echo   [状态] PocketClaw 未运行
     ) else (
         echo   [状态] PocketClaw 运行中 - !OC_STATUS!
         echo   [地址] http://127.0.0.1:18789/#token=pocketclaw
@@ -58,16 +57,64 @@ echo   --------------------------------------------
 set /p "CHOICE=  请选择 [0-5]: "
 if "!CHOICE!"=="1" goto :do_start
 if "!CHOICE!"=="2" goto :do_stop
+if "!CHOICE!"=="3" goto :do_open
+if "!CHOICE!"=="4" goto :do_change_api
+if "!CHOICE!"=="5" goto :do_backup
+if "!CHOICE!"=="0" goto :do_exit
+echo.
+echo   [错误] 无效选择，请重新输入。
+timeout /t 2 >nul
+goto :menu
 
+REM ============================================================
+REM  启动
+REM ============================================================
+:do_start
+cls
+call "%PROJECT_DIR%\scripts\start.bat"
+goto :menu
+
+REM ============================================================
+REM  停止
+REM ============================================================
+:do_stop
 cls
 call "%PROJECT_DIR%\scripts\stop.bat"
 echo.
-set /p "GO_BACK=  按回车键返回菜单，或输入 q 退出: "
+set /p "GO_BACK=  按回车返回菜单，输入 q 退出: "
 if /i "!GO_BACK!"=="q" goto :do_exit
+goto :menu
 
+REM ============================================================
+REM  打开流览器
+REM ============================================================
+:do_open
+start "" "http://127.0.0.1:18789/#token=pocketclaw"
+timeout /t 1 >nul
+goto :menu
+
+REM ============================================================
+REM  修改 API Key
+REM ============================================================
+:do_change_api
+cls
+call "%PROJECT_DIR%\scripts\change-api.bat"
+pause
+goto :menu
+
+REM ============================================================
+REM  备份数据
+REM ============================================================
+:do_backup
+cls
+call "%PROJECT_DIR%\scripts\backup.bat"
+pause
+goto :menu
+
+REM ============================================================
+REM  退出
+REM ============================================================
+:do_exit
 echo.
-echo   正在释放资源...
-REM 切离 U 盘目录
-cd /d "%SystemDrive%\"
 echo   再见！
 endlocal
