@@ -186,46 +186,65 @@ fi
 echo "[OK] 配置文件就绪"
 echo ""
 
-# ── 检查 Docker Hub 连通性 ──
-echo "[信息] 检查 Docker Hub 连通性..."
-if ! docker pull --quiet hello-world &>/dev/null; then
-    echo ""
-    echo "[信息] Docker Hub 不可达，正在自动配置国内镜像加速器..."
-    DAEMON_JSON="$HOME/.docker/daemon.json"
-    mkdir -p "$(dirname "$DAEMON_JSON")"
-    if [ -f "$DAEMON_JSON" ]; then
-        # 用 python3 (macOS 自带) 合并配置
-        python3 -c "
-import json, sys
+# ── 检查/配置 Docker 镜像加速器 ──
+DAEMON_JSON="$HOME/.docker/daemon.json"
+MIRRORS_OK=0
+if [ -f "$DAEMON_JSON" ]; then
+    if python3 -c "import json; cfg=json.load(open('$DAEMON_JSON')); exit(0 if cfg.get('registry-mirrors') else 1)" 2>/dev/null; then
+        MIRRORS_OK=1
+    fi
+fi
+
+if [ "$MIRRORS_OK" -eq 1 ]; then
+    echo "[OK] 镜像加速器已配置，跳过连通性检查"
+else
+    echo "[信息] 检查 Docker Hub 连通性..."
+    # 用 curl 快速检测（5秒超时），比 docker pull 快得多
+    if ! curl -s --connect-timeout 5 --max-time 10 https://registry-1.docker.io/v2/ >/dev/null 2>&1; then
+        echo ""
+        echo "[信息] Docker Hub 不可达，正在自动配置国内镜像加速器..."
+        mkdir -p "$(dirname "$DAEMON_JSON")"
+        if [ -f "$DAEMON_JSON" ]; then
+            python3 -c "
+import json
 try:
     cfg = json.load(open('$DAEMON_JSON'))
 except: cfg = {}
 cfg['registry-mirrors'] = ['https://docker.1ms.run','https://docker.xuanyuan.me']
 json.dump(cfg, open('$DAEMON_JSON','w'), indent=2)
 "
-    else
-        echo '{"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me"]}' > "$DAEMON_JSON"
-    fi
-    echo "[OK] 镜像加速器已配置"
-    echo "[信息] 正在重启 Docker Desktop 以应用配置..."
-    osascript -e 'quit app "Docker"' 2>/dev/null || true
-    sleep 3
-    open -a "Docker"
-    echo "       等待 Docker 引擎就绪（最多等待 120 秒）..."
-    WAIT_COUNT2=0
-    while ! docker info &>/dev/null; do
-        sleep 5
-        WAIT_COUNT2=$((WAIT_COUNT2 + 5))
-        if [ "$WAIT_COUNT2" -ge 120 ]; then
-            echo "[错误] Docker Desktop 重启超时！请手动重启后重试。"
-            exit 1
+        else
+            echo '{"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me"]}' > "$DAEMON_JSON"
         fi
-        echo "       已等待 ${WAIT_COUNT2} 秒..."
-    done
-    echo "[OK] Docker 已重启，镜像加速器已生效"
-else
-    echo "[OK] Docker Hub 连接正常"
-    docker rmi hello-world &>/dev/null
+        echo "[OK] 镜像加速器已配置"
+        echo "[信息] 正在重启 Docker Desktop 以应用配置..."
+        osascript -e 'quit app "Docker"' 2>/dev/null || true
+        # 等待 Docker 完全退出后再重新启动
+        QUIT_WAIT=0
+        while docker info &>/dev/null 2>&1; do
+            sleep 2
+            QUIT_WAIT=$((QUIT_WAIT + 2))
+            if [ "$QUIT_WAIT" -ge 30 ]; then
+                break
+            fi
+        done
+        sleep 2
+        open -a "Docker"
+        echo "       等待 Docker 引擎就绪（最多等待 120 秒）..."
+        WAIT_COUNT2=0
+        while ! docker info &>/dev/null; do
+            sleep 5
+            WAIT_COUNT2=$((WAIT_COUNT2 + 5))
+            if [ "$WAIT_COUNT2" -ge 120 ]; then
+                echo "[错误] Docker Desktop 重启超时！请手动重启后重试。"
+                exit 1
+            fi
+            echo "       已等待 ${WAIT_COUNT2} 秒..."
+        done
+        echo "[OK] Docker 已重启，镜像加速器已生效"
+    else
+        echo "[OK] Docker Hub 连接正常"
+    fi
 fi
 
 # ── 启动 ──
