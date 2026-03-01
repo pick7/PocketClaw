@@ -42,8 +42,7 @@
     5. 输入你设置的 Master Password（加密密码）
     6. 等待容器启动（首次约 3-5 分钟）
     7. 浏览器自动打开聊天界面
-       - 官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
-       - 中文界面: 打开 U 盘中的 frontend\index.html
+       地址: http://127.0.0.1:18789/chat#token=pocketclaw
 
   方式二：手动分步操作
     1. 双击 scripts\setup-env.bat  → 配置向导
@@ -54,9 +53,7 @@
 【日常使用】
 
   启动：插入 U 盘 → 双击 PocketClaw.bat → 选 [1] → 输入密码 → 等几秒
-  使用：浏览器打开下面任一地址——
-       官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
-       中文界面: 打开 U 盘中 frontend\index.html
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
   停止：回到 PocketClaw.bat 菜单 → 选 [2]（或双击 scripts\stop.bat）
   拔盘：等提示"可以安全拔出" → 系统托盘安全弹出 → 拔出
 
@@ -116,8 +113,7 @@
     5. 输入 Master Password
     6. 等待容器启动
     7. 浏览器自动打开聊天界面
-       - 官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
-       - 中文界面: 打开 U 盘中的 frontend/index.html
+       地址: http://127.0.0.1:18789/chat#token=pocketclaw
 
   方式二：手动分步操作（在终端中运行）
     1. cd /Volumes/你的U盘/PocketClaw
@@ -129,9 +125,7 @@
 【日常使用】
 
   启动：插入 U 盘 → 双击 PocketClaw.command → 选 [1] → 输入密码
-  使用：浏览器打开下面任一地址——
-       官方界面: http://127.0.0.1:18789/chat#token=pocketclaw
-       中文界面: 打开 U 盘中 frontend/index.html
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
   停止：回到菜单 → 选 [2]（或终端运行 bash scripts/stop.sh）
   拔盘：等提示后 → 在 Finder 侧边栏点击 U 盘旁的弹出按钮 → 拔出
 
@@ -287,16 +281,8 @@
   → 确认 Docker Desktop 已启动且容器状态为 Running
 
   Q4.5: 页面能打开但显示 "unauthorized" 或 "token missing"
-  → 官方界面：确保 URL 末尾带有 #token=pocketclaw
+  → 确保 URL 末尾带有 #token=pocketclaw
      完整地址: http://127.0.0.1:18789/chat#token=pocketclaw
-  → 中文界面：打开前端 frontend/index.html，默认 Token 已内置
-     如仍报错，点击设置(⚙) → Auth Token 填入 pocketclaw → 保存
-
-  Q4.6: 中文前端显示 "invalid connect params"
-  → 前端版本与 OpenClaw 协议不匹配
-  → 按 Ctrl+F5 强制刷新页面（清除浏览器缓存）
-  → 如仍不行，清空浏览器 localStorage（按 F12 → Console → 输入
-     localStorage.clear()，回车后刷新页面）
 
   Q5: 忘记 Master Password
   → 无法恢复。只能删除 secrets/.env.encrypted，
@@ -410,8 +396,8 @@ PocketClaw v1.1.0 | 最后更新: 2026-03-01
 
   【紧急联系】
 
-    如果自助排除无法解决，请：
+    如果自助排除无法解决，请联系博主寻求帮助：
     1. 运行 docker logs pocketclaw > pocketclaw-log.txt 2>&1
-    2. 把 pocketclaw-log.txt 发给技术支持
-    3. 说明：操作系统版本、Docker 版本、报错截图
+    2. 把 pocketclaw-log.txt 和报错截图发给博主
+    3. 说明：操作系统版本、Docker 版本
 =====================================================================
