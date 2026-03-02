@@ -1,23 +1,24 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 REM ============================================================
-REM backup.bat  ¡ª¡ª ½« PocketClaw ¹Ø¼üÎÄ¼þ±¸·Ýµ½±¾µØ [Windows]
-REM Ä¬ÈÏ±¸·ÝÂ·¾¶: %USERPROFILE%\PocketClaw_Backup\
-REM ÓÃ·¨: scripts\backup.bat [target_dir]
+REM backup.bat  â€”â€” å°† PocketClaw å…³é”®æ–‡ä»¶å¤‡ä»½åˆ°æœ¬åœ° [Windows]
+REM é»˜è®¤å¤‡ä»½è·¯å¾„: %USERPROFILE%\PocketClaw_Backup\
+REM ç”¨æ³•: scripts\backup.bat [target_dir]
 REM ============================================================
 
 set "SCRIPT_DIR=%~dp0"
 pushd "%SCRIPT_DIR%.."
 set "PROJECT_DIR=%CD%"
 
-REM ±¸·ÝÄ¿±ê
+REM å¤‡ä»½ç›®æ ‡
 if "%~1"=="" (
     set "BACKUP_DIR=%USERPROFILE%\PocketClaw_Backup"
 ) else (
     set "BACKUP_DIR=%~1"
 )
 
-REM Ê±¼ä´Á (ÓÅÏÈ wmic£¬½µ¼¶ PowerShell)
+REM æ—¶é—´æˆ³ (ä¼˜å…ˆ wmicï¼Œé™çº§ PowerShell)
 set "DT="
 for /f "tokens=2 delims==" %%i in ('wmic os get localdatetime /value 2^>nul') do set "DT=%%i"
 if "!DT!"=="" (
@@ -26,64 +27,64 @@ if "!DT!"=="" (
 set "SNAPSHOT_DIR=%BACKUP_DIR%\snapshot_%DT:~0,8%_%DT:~8,4%"
 
 echo.
-echo === PocketClaw ±¸·Ý¹¤¾ß ===
-echo Ô´Ä¿Â¼: %PROJECT_DIR%
-echo ±¸·Ýµ½: %SNAPSHOT_DIR%
+echo === PocketClaw å¤‡ä»½å·¥å…· ===
+echo æºç›®å½•: %PROJECT_DIR%
+echo å¤‡ä»½åˆ°: %SNAPSHOT_DIR%
 echo.
 
-REM --------------- ´´½¨Ä¿Â¼ ---------------
+REM --------------- åˆ›å»ºç›®å½• ---------------
 if not exist "%SNAPSHOT_DIR%" mkdir "%SNAPSHOT_DIR%"
 
-REM --------------- ±¸·ÝºËÐÄÎÄ¼þ ---------------
-echo [1/3] ±¸·ÝºËÐÄÎÄ¼þ...
+REM --------------- å¤‡ä»½æ ¸å¿ƒæ–‡ä»¶ ---------------
+echo [1/3] å¤‡ä»½æ ¸å¿ƒæ–‡ä»¶...
 
-REM Ä¿Â¼
+REM ç›®å½•
 for %%D in (config secrets scripts) do (
     if exist "%PROJECT_DIR%\%%D" (
         xcopy /E /I /Q "%PROJECT_DIR%\%%D" "%SNAPSHOT_DIR%\%%D" >nul 2>&1
         echo   + %%D\
     ) else (
-        echo   - %%D\ ^(²»´æÔÚ, Ìø¹ý^)
+        echo   - %%D\ ^(ä¸å­˜åœ¨, è·³è¿‡^)
     )
 )
 
-REM ÎÄ¼þ
+REM æ–‡ä»¶
 for %%F in (docker-compose.yml Dockerfile.custom .env.example .env.channels.example .dockerignore .gitignore README.md VERSION LICENSE.md PocketClaw.bat PocketClaw.command) do (
     if exist "%PROJECT_DIR%\%%F" (
         copy /Y "%PROJECT_DIR%\%%F" "%SNAPSHOT_DIR%\%%F" >nul 2>&1
         echo   + %%F
     ) else (
-        echo   - %%F ^(²»´æÔÚ, Ìø¹ý^)
+        echo   - %%F ^(ä¸å­˜åœ¨, è·³è¿‡^)
     )
 )
 
 echo.
-echo [2/3] ±¸·Ý¿ÉÑ¡Êý¾Ý...
+echo [2/3] å¤‡ä»½å¯é€‰æ•°æ®...
 for %%D in (data\credentials data\sessions) do (
     if exist "%PROJECT_DIR%\%%D" (
         if not exist "%SNAPSHOT_DIR%\%%D" mkdir "%SNAPSHOT_DIR%\%%D"
         xcopy /E /I /Q "%PROJECT_DIR%\%%D" "%SNAPSHOT_DIR%\%%D" >nul 2>&1
         echo   + %%D\
     ) else (
-        echo   - %%D\ ^(²»´æÔÚ, Ìø¹ý^)
+        echo   - %%D\ ^(ä¸å­˜åœ¨, è·³è¿‡^)
     )
 )
 
 echo.
-echo [3/3] Éú³É±¸·ÝÇåµ¥...
+echo [3/3] ç”Ÿæˆå¤‡ä»½æ¸…å•...
 dir /s /b "%SNAPSHOT_DIR%" > "%SNAPSHOT_DIR%\MANIFEST.txt" 2>nul
 
 echo.
-echo === ±¸·ÝÍê³É ===
-echo   Â·¾¶: %SNAPSHOT_DIR%
+echo === å¤‡ä»½å®Œæˆ ===
+echo   è·¯å¾„: %SNAPSHOT_DIR%
 
-REM Í¬²½ README µ½±¸·Ý¸ùÄ¿Â¼
+REM åŒæ­¥ README åˆ°å¤‡ä»½æ ¹ç›®å½•
 if exist "%PROJECT_DIR%\README.md" (
     copy /Y "%PROJECT_DIR%\README.md" "%BACKUP_DIR%\README.md" >nul 2>&1
 )
 
 echo.
-echo [Íê³É] È«²¿Íê³É!
+echo [å®Œæˆ] å…¨éƒ¨å®Œæˆ!
 
 popd
 pause

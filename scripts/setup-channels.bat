@@ -1,8 +1,9 @@
 @echo off
+chcp 65001 >nul
 setlocal EnableDelayedExpansion
 REM ============================================================
-REM setup-channels.bat  ¡ª¡ª ÁÄÌìÆµµÀÅäÖÃÏòµ¼ [Windows]
-REM ÓÃ·¨: scripts\setup-channels.bat
+REM setup-channels.bat  â€”â€” èŠå¤©é¢‘é“é…ç½®å‘å¯¼ [Windows]
+REM ç”¨æ³•: scripts\setup-channels.bat
 REM ============================================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -11,61 +12,61 @@ set "PROJECT_DIR=%CD%"
 set "ENV_FILE=%PROJECT_DIR%\.env"
 set "CONFIGURED=0"
 
-REM --------------- ¼ì²é .env ---------------
+REM --------------- æ£€æŸ¥ .env ---------------
 if not exist "%ENV_FILE%" (
     if exist "%PROJECT_DIR%\secrets\.env.encrypted" (
-        echo [ÌáÊ¾] ÐèÒªÏÈ½âÃÜ .env ÎÄ¼þ
+        echo [æç¤º] éœ€è¦å…ˆè§£å¯† .env æ–‡ä»¶
         if exist "%SCRIPT_DIR%decrypt.bat" (
             call "%SCRIPT_DIR%decrypt.bat"
             if not exist "%ENV_FILE%" (
-                echo [´íÎó] ½âÃÜÊ§°Ü£¬ÇëÏÈÔËÐÐ setup-env.bat Íê³É»ù´¡ÅäÖÃ
+                echo [é”™è¯¯] è§£å¯†å¤±è´¥ï¼Œè¯·å…ˆè¿è¡Œ setup-env.bat å®ŒæˆåŸºç¡€é…ç½®
                 goto :done
             )
         ) else (
-            echo [´íÎó] Î´ÕÒµ½½âÃÜ½Å±¾£¬ÇëÏÈÔËÐÐ setup-env.bat Íê³É»ù´¡ÅäÖÃ
+            echo [é”™è¯¯] æœªæ‰¾åˆ°è§£å¯†è„šæœ¬ï¼Œè¯·å…ˆè¿è¡Œ setup-env.bat å®ŒæˆåŸºç¡€é…ç½®
             goto :done
         )
     ) else (
-        echo [´íÎó] Î´ÕÒµ½ .env ÎÄ¼þ£¬ÇëÏÈÔËÐÐ setup-env.bat Íê³É»ù´¡ÅäÖÃ
+        echo [é”™è¯¯] æœªæ‰¾åˆ° .env æ–‡ä»¶ï¼Œè¯·å…ˆè¿è¡Œ setup-env.bat å®ŒæˆåŸºç¡€é…ç½®
         goto :done
     )
 )
 
-REM === ²Ëµ¥ÏÔÊ¾ ===
+REM === èœå•æ˜¾ç¤º ===
 echo.
 echo ====================================================
-echo        PocketClaw ÁÄÌìÆµµÀÅäÖÃÏòµ¼
-echo    ³ýÁËÄ¬ÈÏµÄ WebChat£¬Äã»¹¿ÉÒÔ½ÓÈë¸ü¶àÁÄÌìÈí¼þ
+echo        PocketClaw èŠå¤©é¢‘é“é…ç½®å‘å¯¼
+echo    é™¤äº†é»˜è®¤çš„ WebChatï¼Œä½ è¿˜å¯ä»¥æŽ¥å…¥æ›´å¤šèŠå¤©è½¯ä»¶
 echo ====================================================
 echo.
-echo   PocketClaw Ä¬ÈÏÒÑÆôÓÃ WebChat£¨ä¯ÀÀÆ÷ÁÄÌì½çÃæ£©¡£
-echo   ÒÔÏÂÆµµÀ¾ùÎª¿ÉÑ¡ÅäÖÃ£¬°´ÐèÆôÓÃ¼´¿É¡£
+echo   PocketClaw é»˜è®¤å·²å¯ç”¨ WebChatï¼ˆæµè§ˆå™¨èŠå¤©ç•Œé¢ï¼‰ã€‚
+echo   ä»¥ä¸‹é¢‘é“å‡ä¸ºå¯é€‰é…ç½®ï¼ŒæŒ‰éœ€å¯ç”¨å³å¯ã€‚
 echo.
 echo   +--------------------------------------------+
-echo   ^|  ¿ÉÑ¡ÆµµÀ:                                 ^|
+echo   ^|  å¯é€‰é¢‘é“:                                 ^|
 echo   ^|                                            ^|
-echo   ^|  1. Telegram    - ×î¼òµ¥£¬ÍÆ¼öÊ×Ñ¡         ^|
-echo   ^|  2. Discord     - ÓÎÏ·/ÉçÇøÓÃ»§ÍÆ¼ö        ^|
-echo   ^|  3. Slack       - °ì¹«³¡¾°ÍÆ¼ö             ^|
-echo   ^|  4. WhatsApp    - º£ÍâÓÃ»§ÍÆ¼ö             ^|
-echo   ^|  5. Signal      - ÒþË½ÓÅÏÈÍÆ¼ö             ^|
-echo   ^|  6. Google Chat - Google ÉúÌ¬ÓÃ»§          ^|
-echo   ^|  7. MS Teams    - ÆóÒµ°ì¹«ÍÆ¼ö             ^|
-echo   ^|  8. Matrix      - ¿ªÔ´È¥ÖÐÐÄ»¯ÁÄÌì         ^|
-echo   ^|  9. BlueBubbles - iMessage (Ðè macOS^)     ^|
-echo   ^| 10. Zalo        - Ô½ÄÏÊÐ³¡                 ^|
+echo   ^|  1. Telegram    - æœ€ç®€å•ï¼ŒæŽ¨èé¦–é€‰         ^|
+echo   ^|  2. Discord     - æ¸¸æˆ/ç¤¾åŒºç”¨æˆ·æŽ¨è        ^|
+echo   ^|  3. Slack       - åŠžå…¬åœºæ™¯æŽ¨è             ^|
+echo   ^|  4. WhatsApp    - æµ·å¤–ç”¨æˆ·æŽ¨è             ^|
+echo   ^|  5. Signal      - éšç§ä¼˜å…ˆæŽ¨è             ^|
+echo   ^|  6. Google Chat - Google ç”Ÿæ€ç”¨æˆ·          ^|
+echo   ^|  7. MS Teams    - ä¼ä¸šåŠžå…¬æŽ¨è             ^|
+echo   ^|  8. Matrix      - å¼€æºåŽ»ä¸­å¿ƒåŒ–èŠå¤©         ^|
+echo   ^|  9. BlueBubbles - iMessage (éœ€ macOS^)     ^|
+echo   ^| 10. Zalo        - è¶Šå—å¸‚åœº                 ^|
 echo   ^|                                            ^|
-echo   ^|  0. Ìø¹ý£¬²»ÅäÖÃ¶îÍâÆµµÀ                   ^|
+echo   ^|  0. è·³è¿‡ï¼Œä¸é…ç½®é¢å¤–é¢‘é“                   ^|
 echo   +--------------------------------------------+
 echo.
 
 set "CHANNEL_INPUT="
-set /p "CHANNEL_INPUT=  ÇëÊäÈëÒªÅäÖÃµÄÆµµÀ±àºÅ£¨¶à¸öÓÃ¶ººÅ·Ö¸ô£¬Èç 1,2£©: "
+set /p "CHANNEL_INPUT=  è¯·è¾“å…¥è¦é…ç½®çš„é¢‘é“ç¼–å·ï¼ˆå¤šä¸ªç”¨é€—å·åˆ†éš”ï¼Œå¦‚ 1,2ï¼‰: "
 
 if "!CHANNEL_INPUT!"=="" goto :skip_channels
 if "!CHANNEL_INPUT!"=="0" goto :skip_channels
 
-REM === ½âÎöÊäÈë£¬ÉèÖÃ±êÖ¾Î» ===
+REM === è§£æžè¾“å…¥ï¼Œè®¾ç½®æ ‡å¿—ä½ ===
 set "DO_1=" & set "DO_2=" & set "DO_3=" & set "DO_4=" & set "DO_5="
 set "DO_6=" & set "DO_7=" & set "DO_8=" & set "DO_9=" & set "DO_10="
 for %%c in (!CHANNEL_INPUT!) do (
@@ -95,256 +96,256 @@ if defined DO_9 call :cfg_bluebubbles
 if defined DO_10 call :cfg_zalo
 goto :finish_channels
 
-REM === ¸÷ÆµµÀÅäÖÃ¶Î ===
+REM === å„é¢‘é“é…ç½®æ®µ ===
 
 :cfg_telegram
 echo.
-echo -- ÅäÖÃ Telegram --
-echo   ÄãÐèÒªÒ»¸ö Telegram Bot Token¡£
-echo   »ñÈ¡·½·¨: ÔÚ Telegram ÖÐËÑË÷ @BotFather ¡ú /newbot ¡ú °´ÌáÊ¾´´½¨
+echo -- é…ç½® Telegram --
+echo   ä½ éœ€è¦ä¸€ä¸ª Telegram Bot Tokenã€‚
+echo   èŽ·å–æ–¹æ³•: åœ¨ Telegram ä¸­æœç´¢ @BotFather â†’ /newbot â†’ æŒ‰æç¤ºåˆ›å»º
 echo.
 set "TG_TOKEN="
-set /p "TG_TOKEN=  ÇëÕ³ÌùÄãµÄ Bot Token: "
+set /p "TG_TOKEN=  è¯·ç²˜è´´ä½ çš„ Bot Token: "
 if "!TG_TOKEN!"=="" (
-    echo   ÒÑÌø¹ý Telegram
+    echo   å·²è·³è¿‡ Telegram
 ) else (
     echo TELEGRAM_BOT_TOKEN=!TG_TOKEN!>> "%ENV_FILE%"
-    echo   [OK] Telegram ÒÑÅäÖÃ
+    echo   [OK] Telegram å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === Discord ÅäÖÃ¶Î ===
+REM === Discord é…ç½®æ®µ ===
 
 :cfg_discord
 echo.
-echo -- ÅäÖÃ Discord --
-echo   ÄãÐèÒªÒ»¸ö Discord Bot Token¡£
-echo   »ñÈ¡·½·¨: https://discord.com/developers/applications
-echo   ´´½¨Ó¦ÓÃ ¡ú Bot ¡ú Reset Token ¡ú ¸´ÖÆ
+echo -- é…ç½® Discord --
+echo   ä½ éœ€è¦ä¸€ä¸ª Discord Bot Tokenã€‚
+echo   èŽ·å–æ–¹æ³•: https://discord.com/developers/applications
+echo   åˆ›å»ºåº”ç”¨ â†’ Bot â†’ Reset Token â†’ å¤åˆ¶
 echo.
 set "DC_TOKEN="
-set /p "DC_TOKEN=  ÇëÕ³ÌùÄãµÄ Bot Token: "
+set /p "DC_TOKEN=  è¯·ç²˜è´´ä½ çš„ Bot Token: "
 if "!DC_TOKEN!"=="" (
-    echo   ÒÑÌø¹ý Discord
+    echo   å·²è·³è¿‡ Discord
 ) else (
     echo DISCORD_BOT_TOKEN=!DC_TOKEN!>> "%ENV_FILE%"
-    echo   [OK] Discord ÒÑÅäÖÃ
+    echo   [OK] Discord å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === Slack ÅäÖÃ¶Î ===
+REM === Slack é…ç½®æ®µ ===
 
 :cfg_slack
 echo.
-echo -- ÅäÖÃ Slack --
-echo   ÄãÐèÒª Slack Bot Token ºÍ App Token¡£
-echo   »ñÈ¡·½·¨: https://api.slack.com/apps ¡ú ´´½¨Ó¦ÓÃ
-echo   Bot Token (xoxb-...^) ÔÚ OAuth ^& Permissions Ò³Ãæ
-echo   App Token (xapp-...^) ÔÚ Basic Information ¡ú App-Level Tokens
+echo -- é…ç½® Slack --
+echo   ä½ éœ€è¦ Slack Bot Token å’Œ App Tokenã€‚
+echo   èŽ·å–æ–¹æ³•: https://api.slack.com/apps â†’ åˆ›å»ºåº”ç”¨
+echo   Bot Token (xoxb-...^) åœ¨ OAuth ^& Permissions é¡µé¢
+echo   App Token (xapp-...^) åœ¨ Basic Information â†’ App-Level Tokens
 echo.
 set "SLACK_BOT="
-set /p "SLACK_BOT=  ÇëÕ³Ìù Bot Token (xoxb-...): "
+set /p "SLACK_BOT=  è¯·ç²˜è´´ Bot Token (xoxb-...): "
 set "SLACK_APP="
-set /p "SLACK_APP=  ÇëÕ³Ìù App Token (xapp-...): "
+set /p "SLACK_APP=  è¯·ç²˜è´´ App Token (xapp-...): "
 if "!SLACK_BOT!"=="" (
-    echo   ÒÑÌø¹ý Slack
+    echo   å·²è·³è¿‡ Slack
 ) else if "!SLACK_APP!"=="" (
-    echo   ÒÑÌø¹ý Slack£¨ÐèÒªÍ¬Ê±ÌîÐ´Á½¸ö Token£©
+    echo   å·²è·³è¿‡ Slackï¼ˆéœ€è¦åŒæ—¶å¡«å†™ä¸¤ä¸ª Tokenï¼‰
 ) else (
     echo SLACK_BOT_TOKEN=!SLACK_BOT!>> "%ENV_FILE%"
     echo SLACK_APP_TOKEN=!SLACK_APP!>> "%ENV_FILE%"
-    echo   [OK] Slack ÒÑÅäÖÃ
+    echo   [OK] Slack å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === WhatsApp+Signal ÅäÖÃ¶Î ===
+REM === WhatsApp+Signal é…ç½®æ®µ ===
 
 :cfg_whatsapp
 echo.
-echo -- ÅäÖÃ WhatsApp --
-echo   WhatsApp Ê¹ÓÃ Baileys Ð­Òé£¬ÐèÒªÉ¨ÂëÁ´½ÓÉè±¸¡£
-echo   Ê×´ÎÆô¶¯ºóÔÚÈÝÆ÷ÈÕÖ¾ÖÐ»áÏÔÊ¾¶þÎ¬Âë£¬ÓÃ WhatsApp É¨Ãè¼´¿É¡£
-echo   ÕâÀïÖ»ÐèÌîÐ´ÔÊÐíÓë AI ¶Ô»°µÄÊÖ»úºÅÂë¡£
+echo -- é…ç½® WhatsApp --
+echo   WhatsApp ä½¿ç”¨ Baileys åè®®ï¼Œéœ€è¦æ‰«ç é“¾æŽ¥è®¾å¤‡ã€‚
+echo   é¦–æ¬¡å¯åŠ¨åŽåœ¨å®¹å™¨æ—¥å¿—ä¸­ä¼šæ˜¾ç¤ºäºŒç»´ç ï¼Œç”¨ WhatsApp æ‰«æå³å¯ã€‚
+echo   è¿™é‡Œåªéœ€å¡«å†™å…è®¸ä¸Ž AI å¯¹è¯çš„æ‰‹æœºå·ç ã€‚
 echo.
 set "WA_NUMS="
-set /p "WA_NUMS=  ÇëÊäÈëÔÊÐíµÄÊÖ»úºÅ£¨º¬¹ú¼ÊÇøºÅ£¬¶à¸öÓÃ¶ººÅ·Ö¸ô£©: "
+set /p "WA_NUMS=  è¯·è¾“å…¥å…è®¸çš„æ‰‹æœºå·ï¼ˆå«å›½é™…åŒºå·ï¼Œå¤šä¸ªç”¨é€—å·åˆ†éš”ï¼‰: "
 if "!WA_NUMS!"=="" (
-    echo   ÒÑÌø¹ý WhatsApp
+    echo   å·²è·³è¿‡ WhatsApp
 ) else (
     echo WHATSAPP_ALLOW_FROM=!WA_NUMS!>> "%ENV_FILE%"
-    echo   [OK] WhatsApp ÒÑÅäÖÃ
-    echo   [×¢Òâ] Ê×´ÎÆô¶¯Ê±Çë²é¿´ÈÕÖ¾É¨Âë: docker compose logs -f pocketclaw
+    echo   [OK] WhatsApp å·²é…ç½®
+    echo   [æ³¨æ„] é¦–æ¬¡å¯åŠ¨æ—¶è¯·æŸ¥çœ‹æ—¥å¿—æ‰«ç : docker compose logs -f pocketclaw
     set /a CONFIGURED+=1
 )
 goto :eof
 
 :cfg_signal
 echo.
-echo -- ÅäÖÃ Signal --
-echo   Signal ÐèÒª°²×° signal-cli ²¢×¢²áºÅÂë¡£
-echo   Ïê¼û: https://docs.openclaw.ai/channels/signal
+echo -- é…ç½® Signal --
+echo   Signal éœ€è¦å®‰è£… signal-cli å¹¶æ³¨å†Œå·ç ã€‚
+echo   è¯¦è§: https://docs.openclaw.ai/channels/signal
 echo.
 set "SIG_NUM="
-set /p "SIG_NUM=  ÇëÊäÈë Signal ×¢²áÊÖ»úºÅ£¨Èç +8613800138000£©: "
+set /p "SIG_NUM=  è¯·è¾“å…¥ Signal æ³¨å†Œæ‰‹æœºå·ï¼ˆå¦‚ +8613800138000ï¼‰: "
 if "!SIG_NUM!"=="" (
-    echo   ÒÑÌø¹ý Signal
+    echo   å·²è·³è¿‡ Signal
 ) else (
     echo SIGNAL_PHONE_NUMBER=!SIG_NUM!>> "%ENV_FILE%"
-    echo   [OK] Signal ÒÑÅäÖÃ
-    echo   [×¢Òâ] »¹ÐèÒªÔÚÈÝÆ÷ÄÚÅäÖÃ signal-cli£¬Ïê¼ûÎÄµµ
+    echo   [OK] Signal å·²é…ç½®
+    echo   [æ³¨æ„] è¿˜éœ€è¦åœ¨å®¹å™¨å†…é…ç½® signal-cliï¼Œè¯¦è§æ–‡æ¡£
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === GChat+Teams ÅäÖÃ¶Î ===
+REM === GChat+Teams é…ç½®æ®µ ===
 
 :cfg_gchat
 echo.
-echo -- ÅäÖÃ Google Chat --
-echo   ÐèÒª Google Cloud ÏîÄ¿µÄ·þÎñÕËºÅÃÜÔ¿ÎÄ¼þ¡£
-echo   Ïê¼û: https://docs.openclaw.ai/channels/googlechat
+echo -- é…ç½® Google Chat --
+echo   éœ€è¦ Google Cloud é¡¹ç›®çš„æœåŠ¡è´¦å·å¯†é’¥æ–‡ä»¶ã€‚
+echo   è¯¦è§: https://docs.openclaw.ai/channels/googlechat
 echo.
 set "GC_CRED="
-set /p "GC_CRED=  ·þÎñÕËºÅ JSON ÃÜÔ¿ÎÄ¼þÂ·¾¶: "
+set /p "GC_CRED=  æœåŠ¡è´¦å· JSON å¯†é’¥æ–‡ä»¶è·¯å¾„: "
 if "!GC_CRED!"=="" (
-    echo   ÒÑÌø¹ý Google Chat
+    echo   å·²è·³è¿‡ Google Chat
 ) else (
     echo GOOGLE_CHAT_CREDENTIALS=!GC_CRED!>> "%ENV_FILE%"
     set "GC_SPACE="
-    set /p "GC_SPACE=  Chat Space ID£¨¿ÉÑ¡£¬»Ø³µÌø¹ý£©: "
+    set /p "GC_SPACE=  Chat Space IDï¼ˆå¯é€‰ï¼Œå›žè½¦è·³è¿‡ï¼‰: "
     if not "!GC_SPACE!"=="" (
         echo GOOGLE_CHAT_SPACES=!GC_SPACE!>> "%ENV_FILE%"
     )
-    echo   [OK] Google Chat ÒÑÅäÖÃ
+    echo   [OK] Google Chat å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
 :cfg_teams
 echo.
-echo -- ÅäÖÃ Microsoft Teams --
-echo   ÐèÒª Azure Bot Framework µÄ App ID ºÍ App Password¡£
-echo   Ïê¼û: https://docs.openclaw.ai/channels/msteams
+echo -- é…ç½® Microsoft Teams --
+echo   éœ€è¦ Azure Bot Framework çš„ App ID å’Œ App Passwordã€‚
+echo   è¯¦è§: https://docs.openclaw.ai/channels/msteams
 echo.
 set "MS_ID="
 set /p "MS_ID=  App ID: "
 set "MS_PASS="
 set /p "MS_PASS=  App Password: "
 if "!MS_ID!"=="" (
-    echo   ÒÑÌø¹ý Microsoft Teams
+    echo   å·²è·³è¿‡ Microsoft Teams
 ) else if "!MS_PASS!"=="" (
-    echo   ÒÑÌø¹ý Microsoft Teams£¨ÐèÒªÍ¬Ê±ÌîÐ´ ID ºÍ Password£©
+    echo   å·²è·³è¿‡ Microsoft Teamsï¼ˆéœ€è¦åŒæ—¶å¡«å†™ ID å’Œ Passwordï¼‰
 ) else (
     echo MSTEAMS_APP_ID=!MS_ID!>> "%ENV_FILE%"
     echo MSTEAMS_APP_PASSWORD=!MS_PASS!>> "%ENV_FILE%"
-    echo   [OK] Microsoft Teams ÒÑÅäÖÃ
+    echo   [OK] Microsoft Teams å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === Matrix+BB+Zalo ÅäÖÃ¶Î ===
+REM === Matrix+BB+Zalo é…ç½®æ®µ ===
 
 :cfg_matrix
 echo.
-echo -- ÅäÖÃ Matrix --
-echo   ÄãÐèÒª Matrix Homeserver URL¡¢User ID ºÍ Access Token¡£
-echo   ¿ÉÒÔÊ¹ÓÃ matrix.org »ò×Ô½¨·þÎñÆ÷¡£
+echo -- é…ç½® Matrix --
+echo   ä½ éœ€è¦ Matrix Homeserver URLã€User ID å’Œ Access Tokenã€‚
+echo   å¯ä»¥ä½¿ç”¨ matrix.org æˆ–è‡ªå»ºæœåŠ¡å™¨ã€‚
 echo.
 set "MX_HOME="
-set /p "MX_HOME=  Homeserver URL (Èç https://matrix.org): "
+set /p "MX_HOME=  Homeserver URL (å¦‚ https://matrix.org): "
 set "MX_USER="
-set /p "MX_USER=  User ID (Èç @mybot:matrix.org): "
+set /p "MX_USER=  User ID (å¦‚ @mybot:matrix.org): "
 set "MX_TOKEN="
 set /p "MX_TOKEN=  Access Token: "
 if "!MX_HOME!"=="" (
-    echo   ÒÑÌø¹ý Matrix
+    echo   å·²è·³è¿‡ Matrix
 ) else if "!MX_USER!"=="" (
-    echo   ÒÑÌø¹ý Matrix£¨ÐèÒªÌîÐ´È«²¿ÈýÏî£©
+    echo   å·²è·³è¿‡ Matrixï¼ˆéœ€è¦å¡«å†™å…¨éƒ¨ä¸‰é¡¹ï¼‰
 ) else if "!MX_TOKEN!"=="" (
-    echo   ÒÑÌø¹ý Matrix£¨ÐèÒªÌîÐ´È«²¿ÈýÏî£©
+    echo   å·²è·³è¿‡ Matrixï¼ˆéœ€è¦å¡«å†™å…¨éƒ¨ä¸‰é¡¹ï¼‰
 ) else (
     echo MATRIX_HOMESERVER=!MX_HOME!>> "%ENV_FILE%"
     echo MATRIX_USER_ID=!MX_USER!>> "%ENV_FILE%"
     echo MATRIX_ACCESS_TOKEN=!MX_TOKEN!>> "%ENV_FILE%"
-    echo   [OK] Matrix ÒÑÅäÖÃ
+    echo   [OK] Matrix å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
 :cfg_bluebubbles
 echo.
-echo -- ÅäÖÃ BlueBubbles (iMessage^) --
-echo   ÐèÒªÔÚ macOS ÉÏÔËÐÐ BlueBubbles Server¡£
-echo   Ïê¼û: https://docs.openclaw.ai/channels/bluebubbles
+echo -- é…ç½® BlueBubbles (iMessage^) --
+echo   éœ€è¦åœ¨ macOS ä¸Šè¿è¡Œ BlueBubbles Serverã€‚
+echo   è¯¦è§: https://docs.openclaw.ai/channels/bluebubbles
 echo.
 set "BB_URL="
-set /p "BB_URL=  BlueBubbles Server URL (Èç http://192.168.1.100:1234): "
+set /p "BB_URL=  BlueBubbles Server URL (å¦‚ http://192.168.1.100:1234): "
 set "BB_PASS="
 set /p "BB_PASS=  Server Password: "
 if "!BB_URL!"=="" (
-    echo   ÒÑÌø¹ý BlueBubbles
+    echo   å·²è·³è¿‡ BlueBubbles
 ) else if "!BB_PASS!"=="" (
-    echo   ÒÑÌø¹ý BlueBubbles£¨ÐèÒªÍ¬Ê±ÌîÐ´ URL ºÍ Password£©
+    echo   å·²è·³è¿‡ BlueBubblesï¼ˆéœ€è¦åŒæ—¶å¡«å†™ URL å’Œ Passwordï¼‰
 ) else (
     echo BLUEBUBBLES_SERVER_URL=!BB_URL!>> "%ENV_FILE%"
     echo BLUEBUBBLES_PASSWORD=!BB_PASS!>> "%ENV_FILE%"
-    echo   [OK] BlueBubbles ÒÑÅäÖÃ
+    echo   [OK] BlueBubbles å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
 :cfg_zalo
 echo.
-echo -- ÅäÖÃ Zalo --
-echo   ÐèÒª Zalo Official Account µÄ Access Token¡£
-echo   Ïê¼û: https://developers.zalo.me/
+echo -- é…ç½® Zalo --
+echo   éœ€è¦ Zalo Official Account çš„ Access Tokenã€‚
+echo   è¯¦è§: https://developers.zalo.me/
 echo.
 set "ZA_TOKEN="
 set /p "ZA_TOKEN=  OA Access Token: "
 if "!ZA_TOKEN!"=="" (
-    echo   ÒÑÌø¹ý Zalo
+    echo   å·²è·³è¿‡ Zalo
 ) else (
     echo ZALO_OA_ACCESS_TOKEN=!ZA_TOKEN!>> "%ENV_FILE%"
-    echo   [OK] Zalo ÒÑÅäÖÃ
+    echo   [OK] Zalo å·²é…ç½®
     set /a CONFIGURED+=1
 )
 goto :eof
 
-REM === Íê³ÉÂß¼­ ===
+REM === å®Œæˆé€»è¾‘ ===
 
 :finish_channels
 echo.
 if !CONFIGURED! GTR 0 (
     echo ====================================================
-    echo    [OK] ÒÑÅäÖÃ !CONFIGURED! ¸ö¶îÍâÆµµÀ
+    echo    [OK] å·²é…ç½® !CONFIGURED! ä¸ªé¢å¤–é¢‘é“
     echo ====================================================
     echo.
-    echo   ÆµµÀÅäÖÃÒÑÐ´Èë .env ÎÄ¼þ¡£
-    echo   ÕýÔÚÖØÐÂ¼ÓÃÜ .env ÒÔ±£»¤Ãô¸ÐÐÅÏ¢...
+    echo   é¢‘é“é…ç½®å·²å†™å…¥ .env æ–‡ä»¶ã€‚
+    echo   æ­£åœ¨é‡æ–°åŠ å¯† .env ä»¥ä¿æŠ¤æ•æ„Ÿä¿¡æ¯...
     echo.
 
-    REM ÖØÐÂ¼ÓÃÜ
+    REM é‡æ–°åŠ å¯†
     if exist "%SCRIPT_DIR%encrypt.bat" (
         call "%SCRIPT_DIR%encrypt.bat"
     ) else (
-        echo   [¾¯¸æ] Î´ÕÒµ½¼ÓÃÜ½Å±¾£¬.env ½«ÒÔÃ÷ÎÄ±£´æ
+        echo   [è­¦å‘Š] æœªæ‰¾åˆ°åŠ å¯†è„šæœ¬ï¼Œ.env å°†ä»¥æ˜Žæ–‡ä¿å­˜
     )
 
     echo.
-    echo   [×¢Òâ] ÐèÒªÖØÆô PocketClaw ²ÅÄÜÉúÐ§:
+    echo   [æ³¨æ„] éœ€è¦é‡å¯ PocketClaw æ‰èƒ½ç”Ÿæ•ˆ:
     echo          scripts\stop.bat
     echo          scripts\start.bat
 ) else (
-    echo   Î´ÅäÖÃÈÎºÎÆµµÀ£¬±£³Öµ±Ç°ÉèÖÃ²»±ä¡£
+    echo   æœªé…ç½®ä»»ä½•é¢‘é“ï¼Œä¿æŒå½“å‰è®¾ç½®ä¸å˜ã€‚
 )
 goto :done
 
 :skip_channels
 echo.
-echo   ÒÑÌø¹ýÆµµÀÅäÖÃ£¬½öÊ¹ÓÃ WebChat¡£
+echo   å·²è·³è¿‡é¢‘é“é…ç½®ï¼Œä»…ä½¿ç”¨ WebChatã€‚
 goto :done
 
 :done
