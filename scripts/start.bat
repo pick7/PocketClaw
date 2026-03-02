@@ -376,11 +376,18 @@ echo          请等待约 10 秒后刷新页面即可
 echo ============================================
 echo.
 
-:: ── 版本更新检查（静默，不阻断启动） ──
+:: ── 版本更新检查 ──
 echo [信息] 正在检查更新...
-set "UPDATE_URL=http://82.156.244.48/version.json"
+set "VERSION_API=http://82.156.244.48/version.json"
 set "LATEST_VER="
-for /f "usebackq delims=" %%a in (`powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%UPDATE_URL%' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop; ($r.Content | ConvertFrom-Json).latest } catch { '' }" 2^>nul`) do set "LATEST_VER=%%a"
+set "DOWNLOAD_URL="
+for /f "usebackq delims=" %%a in (`powershell -NoProfile -Command "try { $j = (Invoke-WebRequest -Uri '%VERSION_API%' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json; Write-Host $j.latest; Write-Host $j.download_url } catch {}" 2^>nul`) do (
+    if "!LATEST_VER!"=="" (
+        set "LATEST_VER=%%a"
+    ) else if "!DOWNLOAD_URL!"=="" (
+        set "DOWNLOAD_URL=%%a"
+    )
+)
 
 if "!LATEST_VER!"=="" (
     echo [信息] 无法获取版本信息（网络问题），跳过检查
@@ -393,10 +400,61 @@ if "!LATEST_VER!"=="" (
     echo          当前版本 v!PC_VER!
     echo ============================================
     echo.
-    set /p UPDATE_CHOICE="  是否打开下载页面？(Y/N, 默认N): "
+    set /p UPDATE_CHOICE="  是否一键更新？(Y/N, 默认N): "
     if /i "!UPDATE_CHOICE!"=="Y" (
-        start "" "https://pocketclaw.cn/#downloads"
-        echo   [OK] 已打开下载页面，请手动下载更新包
+        echo.
+        echo [更新] 正在下载更新包...
+        set "UPDATE_ZIP=%TEMP%\PocketClaw-update.zip"
+        set "UPDATE_DIR=%TEMP%\PocketClaw-update"
+        powershell -NoProfile -Command "try { Invoke-WebRequest -Uri '!DOWNLOAD_URL!' -OutFile '!UPDATE_ZIP!' -TimeoutSec 30 -UseBasicParsing -ErrorAction Stop; Write-Host OK } catch { Write-Host FAIL }" > "%TEMP%\oc_dl.tmp" 2>nul
+        set /p DL_RESULT=<"%TEMP%\oc_dl.tmp"
+        del /q "%TEMP%\oc_dl.tmp" 2>nul
+        if "!DL_RESULT!"=="OK" (
+            echo [更新] 下载完成，正在解压...
+            if exist "!UPDATE_DIR!" rd /s /q "!UPDATE_DIR!" 2>nul
+            powershell -NoProfile -Command "Expand-Archive -Path '!UPDATE_ZIP!' -DestinationPath '!UPDATE_DIR!' -Force" 2>nul
+            echo [更新] 正在安装更新...
+            REM 查找解压后的 PocketClaw 目录
+            set "PAYLOAD="
+            if exist "!UPDATE_DIR!\PocketClaw" set "PAYLOAD=!UPDATE_DIR!\PocketClaw"
+            if "!PAYLOAD!"=="" (
+                for /d %%d in ("!UPDATE_DIR!\*") do (
+                    if exist "%%d\VERSION" set "PAYLOAD=%%d"
+                )
+            )
+            if "!PAYLOAD!"=="" (
+                echo [错误] 更新包格式异常，请手动更新
+            ) else (
+                REM 复制更新文件（不覆盖 secrets/data/.env）
+                for %%f in ("!PAYLOAD!\*.*") do (
+                    set "UFNAME=%%~nxf"
+                    if /i not "!UFNAME!"==".env" (
+                        copy /y "%%f" "%PROJECT_DIR%\" >nul 2>&1
+                    )
+                )
+                if exist "!PAYLOAD!\scripts" (
+                    xcopy /s /y /q "!PAYLOAD!\scripts\*" "%PROJECT_DIR%\scripts\" >nul 2>&1
+                )
+                if exist "!PAYLOAD!\config\openclaw.json" (
+                    copy /y "!PAYLOAD!\config\openclaw.json" "%PROJECT_DIR%\config\openclaw.json" >nul 2>&1
+                )
+                if exist "!PAYLOAD!\config\workspace\AGENTS.md" (
+                    copy /y "!PAYLOAD!\config\workspace\AGENTS.md" "%PROJECT_DIR%\config\workspace\AGENTS.md" >nul 2>&1
+                )
+                set /p NEW_VER=<"!PAYLOAD!\VERSION"
+                echo.
+                echo ============================================
+                echo   [OK] 更新完成! v!PC_VER! → v!NEW_VER!
+                echo ============================================
+                echo   更新将在下次启动时生效
+                echo.
+            )
+            REM 清理临时文件
+            rd /s /q "!UPDATE_DIR!" 2>nul
+            del /q "!UPDATE_ZIP!" 2>nul
+        ) else (
+            echo [错误] 下载失败，请检查网络或手动访问 pocketclaw.cn 下载
+        )
     ) else (
         echo   [信息] 已跳过更新，可随时访问 pocketclaw.cn 下载
     )

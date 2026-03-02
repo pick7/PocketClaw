@@ -411,12 +411,17 @@ echo ""
 echo "  打开界面: $DASHBOARD_URL"
 
 
-# ── 版本更新检查（静默，不阻断启动） ──
+# ── 版本更新检查 ──
 echo "[信息] 正在检查更新..."
-UPDATE_URL="http://82.156.244.48/version.json"
+VERSION_API="http://82.156.244.48/version.json"
 LATEST_VER=""
+DOWNLOAD_URL=""
 if command -v curl &>/dev/null; then
-    LATEST_VER=$(curl -sf --connect-timeout 5 "$UPDATE_URL" 2>/dev/null | grep -o '"latest"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+    VERSION_JSON=$(curl -sf --connect-timeout 5 "$VERSION_API" 2>/dev/null)
+    if [ -n "$VERSION_JSON" ]; then
+        LATEST_VER=$(echo "$VERSION_JSON" | grep -o '"latest"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+        DOWNLOAD_URL=$(echo "$VERSION_JSON" | grep -o '"download_url"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+    fi
 fi
 
 if [ -z "$LATEST_VER" ]; then
@@ -430,7 +435,55 @@ else
     echo "         当前版本 v${POCKETCLAW_VERSION}"
     echo "============================================"
     echo ""
-    echo "  请访问 https://pocketclaw.cn 下载更新包"
+    printf "  是否一键更新？(y/N): "
+    read -r UPDATE_CHOICE
+    if [ "$UPDATE_CHOICE" = "y" ] || [ "$UPDATE_CHOICE" = "Y" ]; then
+        echo ""
+        echo "[更新] 正在下载更新包..."
+        UPDATE_ZIP="/tmp/PocketClaw-update.zip"
+        UPDATE_DIR="/tmp/PocketClaw-update"
+        if curl -sfL --connect-timeout 30 "$DOWNLOAD_URL" -o "$UPDATE_ZIP" 2>/dev/null; then
+            echo "[更新] 下载完成，正在解压..."
+            rm -rf "$UPDATE_DIR"
+            unzip -qo "$UPDATE_ZIP" -d "$UPDATE_DIR" 2>/dev/null || {
+                # macOS 没有 unzip 时用 python
+                python3 -c "import zipfile; zipfile.ZipFile('"$UPDATE_ZIP"').extractall('"$UPDATE_DIR"')" 2>/dev/null
+            }
+            # 查找解压目录
+            PAYLOAD=""
+            if [ -d "$UPDATE_DIR/PocketClaw" ]; then
+                PAYLOAD="$UPDATE_DIR/PocketClaw"
+            else
+                for d in "$UPDATE_DIR"/*/; do
+                    [ -f "${d}VERSION" ] && PAYLOAD="$d" && break
+                done
+            fi
+            if [ -z "$PAYLOAD" ]; then
+                echo "[错误] 更新包格式异常，请手动更新"
+            else
+                echo "[更新] 正在安装更新..."
+                # 复制文件（不覆盖 secrets/data/.env）
+                for f in "$PAYLOAD"/*; do
+                    [ -f "$f" ] && bn=$(basename "$f") && [ "$bn" != ".env" ] && cp -f "$f" "$PROJECT_DIR/" 2>/dev/null
+                done
+                [ -d "$PAYLOAD/scripts" ] && cp -rf "$PAYLOAD/scripts/"* "$PROJECT_DIR/scripts/" 2>/dev/null
+                [ -f "$PAYLOAD/config/openclaw.json" ] && cp -f "$PAYLOAD/config/openclaw.json" "$PROJECT_DIR/config/" 2>/dev/null
+                [ -f "$PAYLOAD/config/workspace/AGENTS.md" ] && cp -f "$PAYLOAD/config/workspace/AGENTS.md" "$PROJECT_DIR/config/workspace/" 2>/dev/null
+                NEW_VER=$(cat "$PAYLOAD/VERSION" 2>/dev/null || echo "?")
+                echo ""
+                echo "============================================"
+                echo "  [OK] 更新完成! v${POCKETCLAW_VERSION} → v${NEW_VER}"
+                echo "============================================"
+                echo "  更新将在下次启动时生效"
+                echo ""
+            fi
+            rm -rf "$UPDATE_DIR" "$UPDATE_ZIP"
+        else
+            echo "[错误] 下载失败，请检查网络或手动访问 pocketclaw.cn 下载"
+        fi
+    else
+        echo "  [信息] 已跳过更新，可随时访问 pocketclaw.cn 下载"
+    fi
     echo ""
 fi
 
