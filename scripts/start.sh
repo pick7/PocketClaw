@@ -373,11 +373,12 @@ else
         --name pocketclaw \
         --restart unless-stopped \
         --network pocketclaw_pocketclaw-net \
-        -p 127.0.0.1:18789:18789 \
+        -p 0.0.0.0:18789:18789 \
         -v "$PROJECT_DIR/config/workspace:/home/node/.openclaw/workspace" \
         -v "$PROJECT_DIR/data/credentials:/home/node/.openclaw/credentials" \
         -v "$PROJECT_DIR/data/sessions:/home/node/.openclaw/sessions" \
         -v "$PROJECT_DIR/data/logs:/home/node/.openclaw/logs" \
+        -v "$PROJECT_DIR/data/skills:/home/node/.openclaw/skills" \
         --env-file "$PROJECT_DIR/.env" \
         "$IMAGE_NAME" >> "$BUILD_LOG" 2>&1
 

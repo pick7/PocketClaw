@@ -257,7 +257,9 @@ cat > "$CONFIG_FILE" << JSONEOF
   },
   "browser": {
     "enabled": true,
-    "headless": true
+    "headless": true,
+    "noSandbox": true,
+    "defaultProfile": "openclaw"
   }
 }
 JSONEOF

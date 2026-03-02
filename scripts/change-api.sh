@@ -207,7 +207,7 @@ if [[ "$RESTART" =~ ^[Yy]$ ]]; then
     echo ""
     echo "  当前提供商: $PROV_NAME"
     echo "  当前模型:   $DEFAULT_MODEL"
-    echo "  控制面板:   http://127.0.0.1:18789/pocketclaw"
+    echo "  控制面板:   http://127.0.0.1:18789/#token=pocketclaw"
 else
     echo ""
     echo "[提示] 稍后手动重启: docker compose restart"
