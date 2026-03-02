@@ -376,6 +376,33 @@ echo          请等待约 10 秒后刷新页面即可
 echo ============================================
 echo.
 
+:: ── 版本更新检查（静默，不阻断启动） ──
+echo [信息] 正在检查更新...
+set "UPDATE_URL=http://82.156.244.48/version.json"
+set "LATEST_VER="
+for /f "usebackq delims=" %%a in (`powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri '%UPDATE_URL%' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop; ($r.Content | ConvertFrom-Json).latest } catch { '' }" 2^>nul`) do set "LATEST_VER=%%a"
+
+if "!LATEST_VER!"=="" (
+    echo [信息] 无法获取版本信息（网络问题），跳过检查
+) else if "!LATEST_VER!"=="!PC_VER!" (
+    echo [OK] 当前已是最新版本 v!PC_VER!
+) else (
+    echo.
+    echo ============================================
+    echo   [更新] 发现新版本 v!LATEST_VER!
+    echo          当前版本 v!PC_VER!
+    echo ============================================
+    echo.
+    set /p UPDATE_CHOICE="  是否打开下载页面？(Y/N, 默认N): "
+    if /i "!UPDATE_CHOICE!"=="Y" (
+        start "" "https://pocketclaw.cn/#downloads"
+        echo   [OK] 已打开下载页面，请手动下载更新包
+    ) else (
+        echo   [信息] 已跳过更新，可随时访问 pocketclaw.cn 下载
+    )
+    echo.
+)
+
 :: 打开浏览器
 echo [信息] 正在打开浏览器...
 start "" "http://127.0.0.1:18789/#token=pocketclaw"

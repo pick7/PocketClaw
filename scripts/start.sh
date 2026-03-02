@@ -411,6 +411,29 @@ echo ""
 echo "  打开界面: $DASHBOARD_URL"
 
 
+# ── 版本更新检查（静默，不阻断启动） ──
+echo "[信息] 正在检查更新..."
+UPDATE_URL="http://82.156.244.48/version.json"
+LATEST_VER=""
+if command -v curl &>/dev/null; then
+    LATEST_VER=$(curl -sf --connect-timeout 5 "$UPDATE_URL" 2>/dev/null | grep -o '"latest"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+fi
+
+if [ -z "$LATEST_VER" ]; then
+    echo "[信息] 无法获取版本信息（网络问题），跳过检查"
+elif [ "$LATEST_VER" = "$POCKETCLAW_VERSION" ]; then
+    echo "[OK] 当前已是最新版本 v${POCKETCLAW_VERSION}"
+else
+    echo ""
+    echo "============================================"
+    echo "  [更新] 发现新版本 v${LATEST_VER}"
+    echo "         当前版本 v${POCKETCLAW_VERSION}"
+    echo "============================================"
+    echo ""
+    echo "  请访问 https://pocketclaw.cn 下载更新包"
+    echo ""
+fi
+
 # ── 清理明文 ──
 if [ -f "$ENC_FILE" ]; then
     secure_wipe "$PROJECT_DIR/.env"
