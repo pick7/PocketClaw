@@ -256,7 +256,8 @@ cat > "$CONFIG_FILE" << JSONEOF
     }
   },
   "browser": {
-    "enabled": false
+    "enabled": true,
+    "headless": true
   }
 }
 JSONEOF

@@ -16,7 +16,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl \
     openssh-client \
     ca-certificates \
+    chromium \
+    fonts-noto-cjk \
     && rm -rf /var/lib/apt/lists/*
+
+# Chromium 无头浏览器配置（让 Playwright/Puppeteer 使用系统安装的 Chromium）
+ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+ENV CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage"
 
 # 安装 OpenClaw（使用淘宝 npm 镜像加速）
 # 将 git SSH 协议替换为 HTTPS（容器内无 GitHub SSH 密钥）
@@ -32,6 +41,7 @@ RUN mkdir -p /home/node/.openclaw/workspace \
              /home/node/.openclaw/logs \
              /home/node/.openclaw/canvas \
              /home/node/.openclaw/cron \
+             /home/node/.openclaw/skills \
     && chown -R node:node /home/node/.openclaw
 
 # 缓存破坏参数（更改配置后用 --build-arg CACHE_DATE=$(date +%s) 强制刷新后续层）

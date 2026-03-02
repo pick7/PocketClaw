@@ -61,6 +61,7 @@
     }
   },
   "browser": {
-    "enabled": false
+    "enabled": true,
+    "headless": true
   }
 }
