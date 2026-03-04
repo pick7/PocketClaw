@@ -3,6 +3,10 @@
 
 FROM node:22-slim
 
+LABEL maintainer="PocketClaw" \
+      description="PocketClaw - OpenClaw 一键部署方案" \
+      org.opencontainers.image.source="https://github.com/pocketclaw"
+
 WORKDIR /app
 
 # 使用国内 Debian 镜像源（解决 deb.debian.org 在国内不稳定的问题）
@@ -38,10 +42,13 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV CHROMIUM_FLAGS="--no-sandbox --disable-gpu --disable-dev-shm-usage"
 
+# Node.js 生产模式（禁用开发调试，提升性能）
+ENV NODE_ENV=production
+
 # 安装 OpenClaw（使用淘宝 npm 镜像加速）
 # 将 git SSH 协议替换为 HTTPS（容器内无 GitHub SSH 密钥）
-RUN git config --global url.https://github.com/.insteadOf ssh://git@github.com/
-RUN git config --global url.https://github.com/.insteadOf git@github.com:
+RUN git config --global url.https://github.com/.insteadOf ssh://git@github.com/ \
+    && git config --global url.https://github.com/.insteadOf git@github.com:
 
 # 手动缓存破坏（仅在需要升级 OpenClaw 时使用）:
 # docker compose build --build-arg CACHE_DATE=$(date +%s)
@@ -73,19 +80,27 @@ COPY --chown=node:node config/openclaw.json /home/node/.openclaw/openclaw.json
 RUN chown -R node:node /usr/local/lib/node_modules/openclaw/dist/control-ui/ 2>/dev/null || true \
     && chmod a+w /usr/local/lib/node_modules/openclaw/dist/gateway-cli-*.js 2>/dev/null || true
 
-# 复制语音对话插件（entrypoint.sh 启动时注入到前端）
-COPY --chown=node:node config/voice-chat.js /app/config/voice-chat.js
-
 # 复制手机专属页面（entrypoint.sh 启动时注入到前端）
 COPY --chown=node:node config/mobile.html /app/config/mobile.html
 
-# 复制启动入口脚本
+# 复制 AI 厂商配置（entrypoint.sh 动态读取）
+COPY --chown=node:node config/providers.json /app/config/providers.json
+
+# 复制启动入口脚本和 Gateway 路由注入脚本
 COPY --chown=node:node scripts/entrypoint.sh /app/entrypoint.sh
+COPY --chown=node:node scripts/gateway-patch.py /app/scripts/gateway-patch.py
 RUN chmod +x /app/entrypoint.sh
 
 USER node
 
 EXPOSE 18789
+
+# 健康检查（每30秒检测一次，连续3次失败则标记为 unhealthy）
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -sf http://localhost:18789/ || exit 1
+
+# 优雅停机信号
+STOPSIGNAL SIGTERM
 
 # 使用自定义入口脚本（动态生成配置后启动 OpenClaw）
 ENTRYPOINT ["/app/entrypoint.sh"]

@@ -5,6 +5,23 @@
 #       或 source "$(dirname "$0")/_common.sh"
 # ============================================================
 
+# ── 颜色输出 ──
+red()   { printf "\033[31m%s\033[0m\n" "$*"; }
+green() { printf "\033[32m%s\033[0m\n" "$*"; }
+yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
+cyan()  { printf "\033[36m%s\033[0m\n" "$*"; }
+bold()  { printf "\033[1m%s\033[0m\n" "$*"; }
+
+# ── 跨平台 sed -i（macOS / Linux 兼容）──
+# 用法: sed_inplace 's/old/new/' file.txt
+sed_inplace() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 # ── Docker Compose v1/v2 兼容封装 ──
 # 用法: run_compose up -d --build
 #       run_compose down
@@ -43,4 +60,22 @@ detect_project_dir() {
         PROJECT_DIR="$script_dir"
     fi
     export PROJECT_DIR
+}
+
+# ── OpenSSL 加密 .env → .env.encrypted ──
+# 用法: encrypt_env_file "$ENV_FILE" "$ENC_FILE" "$PASSWORD"
+# 返回: 0=成功, 1=失败
+encrypt_env_file() {
+    local env_file="$1" enc_file="$2" password="$3"
+    printf '%s' "$password" | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
+        -in "$env_file" -out "$enc_file" -pass stdin 2>/dev/null
+}
+
+# ── OpenSSL 解密 .env.encrypted → .env ──
+# 用法: decrypt_env_file "$ENC_FILE" "$ENV_FILE" "$PASSWORD"
+# 返回: 0=成功, 1=失败
+decrypt_env_file() {
+    local enc_file="$1" env_file="$2" password="$3"
+    printf '%s' "$password" | openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 \
+        -in "$enc_file" -out "$env_file" -pass stdin 2>/dev/null
 }

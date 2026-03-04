@@ -166,6 +166,34 @@ html, body {
   margin: 6px 0;
   color: var(--text-secondary);
 }
+.bubble h1, .bubble h2, .bubble h3, .bubble h4 {
+  margin: 8px 0 4px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.bubble h1 { font-size: 1.3em; }
+.bubble h2 { font-size: 1.2em; }
+.bubble h3 { font-size: 1.1em; }
+.bubble h4 { font-size: 1.05em; }
+.bubble del { text-decoration: line-through; color: var(--text-secondary); }
+.bubble hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
+.bubble table {
+  border-collapse: collapse;
+  margin: 6px 0;
+  font-size: 13px;
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+.bubble th, .bubble td {
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  text-align: left;
+}
+.bubble th {
+  background: rgba(0,0,0,0.05);
+  font-weight: 600;
+}
 
 /* 时间戳 */
 .msg-time {
@@ -452,20 +480,32 @@ const STATE = {
 const $ = id => document.getElementById(id);
 const DOM = {};
 
-// ── 聊天记录持久化 ──
+// ── 聊天记录持久化（JSON 结构化存储） ──
 const STORAGE_KEY = 'pocketclaw_chat_history';
+const CHAT_MAX_MESSAGES = 200;
+const chatHistory = [];
+
 function saveChatHistory() {
   try {
-    const msgs = DOM.messages ? DOM.messages.innerHTML : '';
-    localStorage.setItem(STORAGE_KEY, msgs);
+    // 限制最大消息数，避免 localStorage 溢出
+    while (chatHistory.length > CHAT_MAX_MESSAGES) chatHistory.shift();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
   } catch(e) {}
 }
 function loadChatHistory() {
   try {
-    return localStorage.getItem(STORAGE_KEY) || '';
-  } catch(e) { return ''; }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    // 兼容旧版 innerHTML 格式：如果不是 JSON 数组，丢弃旧数据
+    if (raw.charAt(0) !== '[') {
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    }
+    return JSON.parse(raw);
+  } catch(e) { return []; }
 }
 function clearChatHistory() {
+  chatHistory.length = 0;
   try { localStorage.removeItem(STORAGE_KEY); } catch(e) {}
 }
 
@@ -740,36 +780,99 @@ function extractText(msg) {
   return null;
 }
 
-// ── Markdown 简易渲染 ──
+// ── Markdown 渲染（增强版） ──
 function renderMd(text) {
   if (!text) return '';
-  let h = text
-    // 转义 HTML
+
+  // 提取代码块，防止内部内容被 Markdown 处理
+  var codeBlocks = [];
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) {
+    codeBlocks.push('<pre><code>' + code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</code></pre>');
+    return '\x00CB' + (codeBlocks.length - 1) + '\x00';
+  });
+
+  // 提取行内代码
+  var inlineCodes = [];
+  text = text.replace(/`([^`]+)`/g, function(m, code) {
+    inlineCodes.push('<code>' + code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</code>');
+    return '\x00IC' + (inlineCodes.length - 1) + '\x00';
+  });
+
+  var h = text
+    // 转义 HTML（代码块/行内代码已提取，不受影响）
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    // 代码块
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-    // 行内代码
-    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    // 标题（h1-h4）
+    .replace(/^####\s+(.+)$/gm, '<h4>$1</h4>')
+    .replace(/^###\s+(.+)$/gm, '<h3>$1</h3>')
+    .replace(/^##\s+(.+)$/gm, '<h2>$1</h2>')
+    .replace(/^#\s+(.+)$/gm, '<h1>$1</h1>')
+    // 水平分隔线
+    .replace(/^[-*_]{3,}\s*$/gm, '<hr>')
     // 粗体
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // 斜体
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    // 链接
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+    // 删除线
+    .replace(/~~(.+?)~~/g, '<del>$1</del>')
+    // 链接（XSS 防护: 仅允许 http/https 协议）
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(m, text, url) {
+      if (/^https?:\/\//i.test(url)) {
+        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+      }
+      return text;
+    })
     // 引用
     .replace(/^&gt;\s?(.+)$/gm, '<blockquote>$1</blockquote>')
     // 无序列表
     .replace(/^[-*]\s+(.+)$/gm, '<li>$1</li>')
     // 有序列表
     .replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+
   // 包裹连续 li
   h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+
+  // 简易表格支持
+  h = h.replace(/((?:^\|.+\|\s*\n)+)/gm, function(tableBlock) {
+    var rows = tableBlock.trim().split('\n');
+    var html = '<table>';
+    var isHeader = true;
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i].trim();
+      // 跳过分隔行 |---|---|
+      if (/^\|[\s\-:]+\|$/.test(row) || /^\|(\s*[-:]+[-|\s:]*)\|$/.test(row)) {
+        isHeader = false;
+        continue;
+      }
+      var cells = row.split('|').filter(function(c, idx, arr) {
+        return idx > 0 && idx < arr.length - 1;
+      });
+      var tag = (i === 0) ? 'th' : 'td';
+      html += '<tr>';
+      cells.forEach(function(cell) {
+        html += '<' + tag + '>' + cell.trim() + '</' + tag + '>';
+      });
+      html += '</tr>';
+    }
+    html += '</table>';
+    return html;
+  });
+
   // 段落
   h = h.replace(/\n{2,}/g, '</p><p>');
   h = '<p>' + h + '</p>';
   h = h.replace(/<p><\/p>/g, '');
   // 单换行
   h = h.replace(/([^>])\n([^<])/g, '$1<br>$2');
+
+  // 恢复行内代码占位符
+  h = h.replace(/\x00IC(\d+)\x00/g, function(m, i) {
+    return inlineCodes[parseInt(i)];
+  });
+  // 恢复代码块占位符
+  h = h.replace(/\x00CB(\d+)\x00/g, function(m, i) {
+    return codeBlocks[parseInt(i)];
+  });
+
   return h;
 }
 
@@ -780,9 +883,11 @@ function scrollToBottom() {
 }
 
 function addUserBubble(text) {
+  const t = timeStr();
+  chatHistory.push({ role: 'user', text: text, time: t });
   const div = document.createElement('div');
   div.className = 'msg user';
-  div.innerHTML = '<div class="bubble">' + escapeHtml(text) + '</div><div class="msg-time">' + timeStr() + '</div>';
+  div.innerHTML = '<div class="bubble">' + escapeHtml(text) + '</div><div class="msg-time">' + t + '</div>';
   DOM.messages.appendChild(div);
   scrollToBottom();
   saveChatHistory();
@@ -824,6 +929,8 @@ function updateStreamBubble(text) {
 
 function finalizeAIMessage(text) {
   removeTypingIndicator();
+  const t = timeStr();
+  chatHistory.push({ role: 'ai', text: text, time: t });
   let el = $('stream-bubble');
   if (el) {
     el.id = '';
@@ -831,12 +938,12 @@ function finalizeAIMessage(text) {
     // 添加时间
     const timeEl = document.createElement('div');
     timeEl.className = 'msg-time';
-    timeEl.textContent = timeStr();
+    timeEl.textContent = t;
     el.appendChild(timeEl);
   } else {
     const div = document.createElement('div');
     div.className = 'msg ai';
-    div.innerHTML = '<div class="bubble">' + renderMd(text) + '</div><div class="msg-time">' + timeStr() + '</div>';
+    div.innerHTML = '<div class="bubble">' + renderMd(text) + '</div><div class="msg-time">' + t + '</div>';
     DOM.messages.appendChild(div);
   }
   scrollToBottom();
@@ -1008,15 +1115,21 @@ function init() {
     });
   }
 
-  // 恢复历史聊天记录
-  const savedChat = loadChatHistory();
-  if (savedChat && DOM.messages) {
-    DOM.messages.innerHTML = savedChat;
-    // 移除可能残留的打字指示器和流式气泡
-    const oldTyping = $('typing');
-    if (oldTyping) oldTyping.remove();
-    const oldStream = $('stream-bubble');
-    if (oldStream) oldStream.remove();
+  // 恢复历史聊天记录（从 JSON 结构化数据重建 DOM）
+  const savedMsgs = loadChatHistory();
+  if (savedMsgs.length > 0 && DOM.messages) {
+    savedMsgs.forEach(function(msg) {
+      chatHistory.push(msg);
+      const div = document.createElement('div');
+      if (msg.role === 'user') {
+        div.className = 'msg user';
+        div.innerHTML = '<div class="bubble">' + escapeHtml(msg.text) + '</div><div class="msg-time">' + (msg.time || '') + '</div>';
+      } else {
+        div.className = 'msg ai';
+        div.innerHTML = '<div class="bubble">' + renderMd(msg.text) + '</div><div class="msg-time">' + (msg.time || '') + '</div>';
+      }
+      DOM.messages.appendChild(div);
+    });
     scrollToBottom();
   }
 
@@ -1118,14 +1231,16 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
-// 暴露给后续子步骤
-window._PC = STATE;
-window._DOM = DOM;
-window._showToast = showToast;
-window._request = request;
-window._sendJSON = sendJSON;
-window._uuid = uuid;
-window._timeStr = timeStr;
+// 仅在开发模式暴露内部 API（通过 URL 参数 ?dev=1 激活）
+if (new URLSearchParams(location.search).has('dev')) {
+  window._PC = STATE;
+  window._DOM = DOM;
+  window._showToast = showToast;
+  window._request = request;
+  window._sendJSON = sendJSON;
+  window._uuid = uuid;
+  window._timeStr = timeStr;
+}
 
 })();
 </script>

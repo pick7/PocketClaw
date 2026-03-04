@@ -54,6 +54,13 @@ if "!MASTER_PASS!"=="" (
     exit /b 1
 )
 
+REM --------------- 密码长度校验 ---------------
+powershell -NoProfile -Command "if('!MASTER_PASS!'.Length -lt 6){Write-Host '[错误] 密码太短, 至少需要 6 个字符.'; exit 1}" || (
+    popd
+    pause
+    exit /b 1
+)
+
 REM 确认密码也使用 PowerShell 掩码输入
 for /f "delims=" %%p in ('powershell -NoProfile -Command "$p = Read-Host -Prompt '  请再次确认密码' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))"') do set "MASTER_PASS2=%%p"
 
@@ -84,7 +91,18 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo [OK] 加密成功!
+REM 验证: 用同一密码试解密, 确保密文正确
+<nul set /p ="!MASTER_PASS!"| openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 ^
+    -in "%ENC_FILE%" -pass stdin > nul 2>&1
+if errorlevel 1 (
+    echo [错误] 加密验证失败! 密文可能损坏, 请重试.
+    del /q "%ENC_FILE%" 2>nul
+    popd
+    pause
+    exit /b 1
+)
+
+echo [OK] 加密成功! (已验证密文完整性)
 echo   加密文件: %ENC_FILE%
 echo.
 echo [建议] 加密完成后, 可以删除明文 .env 文件:

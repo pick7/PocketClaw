@@ -304,14 +304,17 @@ if not defined GATEWAY_AUTH_PASSWORD (
 set /p PC_VER=<"%PROJECT_DIR%\VERSION"
 echo [信息] 当前版本 v!PC_VER!，正在检查更新...
 set "VERSION_API=https://pocketclaw-1380766547.cos.ap-beijing.myqcloud.com/version.json"
+set "VERSION_API_BACKUP=https://raw.githubusercontent.com/pocketclaw/pocketclaw/main/version.json"
 set "LATEST_VER="
 set "DOWNLOAD_URL="
-powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; try { $j = (Invoke-WebRequest -Uri '%VERSION_API%' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json; Write-Host $j.latest; Write-Host $j.download_url } catch {}" > "%TEMP%\oc_ver.tmp" 2>nul
+powershell -NoProfile -Command "[Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $u='%VERSION_API%'; try { $j = (Invoke-WebRequest -Uri $u -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json } catch { try { $j = (Invoke-WebRequest -Uri '%VERSION_API_BACKUP%' -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop).Content | ConvertFrom-Json } catch { $j=$null } }; if($j){ Write-Host $j.latest; Write-Host $j.download_url; if($j.download_url_backup){Write-Host $j.download_url_backup} }" > "%TEMP%\oc_ver.tmp" 2>nul
 for /f "usebackq delims=" %%a in ("%TEMP%\oc_ver.tmp") do (
     if "!LATEST_VER!"=="" (
         set "LATEST_VER=%%a"
     ) else if "!DOWNLOAD_URL!"=="" (
         set "DOWNLOAD_URL=%%a"
+    ) else if "!DOWNLOAD_URL_BACKUP!"=="" (
+        set "DOWNLOAD_URL_BACKUP=%%a"
     )
 )
 del /q "%TEMP%\oc_ver.tmp" 2>nul
@@ -365,7 +368,7 @@ if "!LATEST_VER!"=="" (
                 if exist "!PAYLOAD!\scripts" (
                     xcopy /s /y /q "!PAYLOAD!\scripts\*" "%PROJECT_DIR%\scripts\" >nul 2>&1
                 )
-                REM 复制 config/ 下所有文件（mobile.html, voice-chat.js, openclaw.json）
+                REM 复制 config/ 下所有文件（mobile.html, openclaw.json）
                 if exist "!PAYLOAD!\config" (
                     for %%c in ("!PAYLOAD!\config\*.*") do (
                         copy /y "%%c" "%PROJECT_DIR%\config\" >nul 2>&1
@@ -395,6 +398,13 @@ if "!LATEST_VER!"=="" (
             REM 清理临时文件
             rd /s /q "!UPDATE_DIR!" 2>nul
             del /q "!UPDATE_ZIP!" 2>nul
+        ) else if defined DOWNLOAD_URL_BACKUP (
+            echo [信息] 主下载源不可用，尝试备用源...
+            powershell -NoProfile -Command "try { Invoke-WebRequest -Uri '!DOWNLOAD_URL_BACKUP!' -OutFile '!UPDATE_ZIP!' -TimeoutSec 30 -UseBasicParsing -ErrorAction Stop; Write-Host OK } catch { Write-Host FAIL }" > "%TEMP%\oc_dl.tmp" 2>nul
+            set /p DL_RESULT=<"%TEMP%\oc_dl.tmp"
+            del /q "%TEMP%\oc_dl.tmp" 2>nul
+            if "!DL_RESULT!"=="OK" goto :dl_ok
+            echo [错误] 下载失败，请检查网络或手动访问 pocketclaw.cn 下载
         ) else (
             echo [错误] 下载失败，请检查网络或手动访问 pocketclaw.cn 下载
         )
@@ -421,7 +431,7 @@ set "NEED_BUILD=1"
 
 REM 用 PowerShell 计算关键文件的组合哈希
 set "CURRENT_HASH="
-for /f "usebackq delims=" %%h in (`powershell -NoProfile -Command "try { $files=@('%PROJECT_DIR%\Dockerfile.custom','%PROJECT_DIR%\scripts\entrypoint.sh','%PROJECT_DIR%\config\mobile.html','%PROJECT_DIR%\config\voice-chat.js','%PROJECT_DIR%\config\openclaw.json','%PROJECT_DIR%\VERSION'); $hasher=[System.Security.Cryptography.SHA256]::Create(); $all=[byte[]]@(); foreach($f in $files){if(Test-Path $f){$all+=[IO.File]::ReadAllBytes($f)}}; $hash=$hasher.ComputeHash($all); -join($hash|ForEach-Object{$_.ToString('x2')}) } catch { '' }"`) do set "CURRENT_HASH=%%h"
+for /f "usebackq delims=" %%h in (`powershell -NoProfile -Command "try { $files=@('%PROJECT_DIR%\Dockerfile.custom','%PROJECT_DIR%\scripts\entrypoint.sh','%PROJECT_DIR%\config\mobile.html','%PROJECT_DIR%\config\openclaw.json','%PROJECT_DIR%\VERSION'); $hasher=[System.Security.Cryptography.SHA256]::Create(); $all=[byte[]]@(); foreach($f in $files){if(Test-Path $f){$all+=[IO.File]::ReadAllBytes($f)}}; $hash=$hasher.ComputeHash($all); -join($hash|ForEach-Object{$_.ToString('x2')}) } catch { '' }"`) do set "CURRENT_HASH=%%h"
 
 REM 读取上次构建哈希
 set "PREV_HASH="

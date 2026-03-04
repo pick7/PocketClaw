@@ -8,15 +8,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$PROJECT_DIR/.env"
-
-# --------------- 颜色函数 ---------------
-red()   { printf "\033[31m%s\033[0m\n" "$*"; }
-green() { printf "\033[32m%s\033[0m\n" "$*"; }
-yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
-cyan()  { printf "\033[36m%s\033[0m\n" "$*"; }
-bold()  { printf "\033[1m%s\033[0m\n" "$*"; }
 
 # --------------- 检查 .env 是否存在 ---------------
 if [ ! -f "$ENV_FILE" ]; then
@@ -40,12 +34,7 @@ append_env() {
     local key="$1" value="$2" comment="${3:-}"
     # 检查是否已存在，如果存在则更新
     if grep -q "^${key}=" "$ENV_FILE" 2>/dev/null; then
-        # macOS 和 Linux 兼容的 sed
-        if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
-        else
-            sed -i "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
-        fi
+        sed_inplace "s|^${key}=.*|${key}=${value}|" "$ENV_FILE"
     else
         if [ -n "$comment" ]; then
             echo "" >> "$ENV_FILE"
@@ -286,12 +275,7 @@ if [ "$CONFIGURED" -gt 0 ]; then
     ENCRYPT_SCRIPT="$SCRIPT_DIR/encrypt-secrets.sh"
     if [ -f "$ENCRYPT_SCRIPT" ]; then
         if bash "$ENCRYPT_SCRIPT"; then
-            source "$SCRIPT_DIR/_common.sh" 2>/dev/null || true
-            if type secure_wipe &>/dev/null; then
-                secure_wipe "$PROJECT_DIR/.env"
-            else
-                rm -f "$PROJECT_DIR/.env"
-            fi
+            secure_wipe "$PROJECT_DIR/.env"
             green "  ✓ .env 已重新加密保护"
         else
             yellow "  ⚠ 重新加密失败，请稍后手动运行 encrypt-secrets.sh"

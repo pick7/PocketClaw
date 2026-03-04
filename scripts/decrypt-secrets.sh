@@ -7,15 +7,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 ENV_FILE="$PROJECT_DIR/.env"
 ENC_FILE="$PROJECT_DIR/secrets/.env.encrypted"
-
-# --------------- 颜色函数 ---------------
-red()   { printf "\033[31m%s\033[0m\n" "$*"; }
-green() { printf "\033[32m%s\033[0m\n" "$*"; }
-yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
 
 # ── 无论正常退出还是异常退出，都清理密码变量 ──
 trap 'unset MASTER_PASS 2>/dev/null' EXIT
@@ -63,11 +59,7 @@ fi
 # --------------- 执行解密 ---------------
 yellow "[信息] 正在解密 secrets/.env.encrypted → .env ..."
 
-# 通过 stdin 传递密码，避免 ps aux 可见
-if printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 \
-    -in "$ENC_FILE" \
-    -out "$ENV_FILE" \
-    -pass stdin; then
+if decrypt_env_file "$ENC_FILE" "$ENV_FILE" "$MASTER_PASS"; then
     green "[OK] 解密成功!"
     echo "  .env 文件已还原: $ENV_FILE"
     echo ""

@@ -1,0 +1,482 @@
+{
+  "zhipu": {
+    "label": "智谱 AI (免费)",
+    "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+    "defaultModel": "glm-4.7-flash",
+    "models": [
+      {
+        "id": "glm-4.7-flash",
+        "name": "GLM-4.7 Flash (旗舰免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 200000,
+        "maxTokens": 128000,
+        "compat": {}
+      },
+      {
+        "id": "glm-4-flash",
+        "name": "GLM-4 Flash (免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "glm-z1-flash",
+        "name": "GLM-Z1 Flash (推理免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "glm-4.6v-flash",
+        "name": "GLM-4.6V Flash (视觉免费)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 8192,
+        "maxTokens": 4096,
+        "compat": {}
+      }
+    ]
+  },
+  "zhipu-pro": {
+    "label": "智谱 AI (付费高级)",
+    "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+    "defaultModel": "glm-4-plus",
+    "models": [
+      {
+        "id": "glm-4-plus",
+        "name": "GLM-4 Plus (高级)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "glm-4-long",
+        "name": "GLM-4 Long (超长文本)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 1000000,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "glm-4-alltools",
+        "name": "GLM-4 AllTools (全能)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "glm-z1-air",
+        "name": "GLM-Z1 Air (推理)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 16384,
+        "compat": {}
+      }
+    ]
+  },
+  "deepseek": {
+    "label": "DeepSeek",
+    "baseUrl": "https://api.deepseek.com/v1",
+    "defaultModel": "deepseek-chat",
+    "models": [
+      {
+        "id": "deepseek-chat",
+        "name": "DeepSeek V3",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 65536,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "deepseek-reasoner",
+        "name": "DeepSeek R1 (深度推理)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 65536,
+        "maxTokens": 8192,
+        "compat": {}
+      }
+    ]
+  },
+  "openai": {
+    "label": "OpenAI",
+    "baseUrl": "https://api.openai.com/v1",
+    "defaultModel": "gpt-4o",
+    "models": [
+      {
+        "id": "gpt-4o",
+        "name": "GPT-4o (旗舰)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "gpt-4o-mini",
+        "name": "GPT-4o Mini (轻量)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 128000,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "gpt-4.1",
+        "name": "GPT-4.1 (最新)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1047576,
+        "maxTokens": 32768,
+        "compat": {}
+      },
+      {
+        "id": "o3-mini",
+        "name": "o3-mini (推理)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 200000,
+        "maxTokens": 100000,
+        "compat": {}
+      }
+    ]
+  },
+  "anthropic": {
+    "label": "Anthropic Claude",
+    "baseUrl": "https://api.anthropic.com/v1",
+    "defaultModel": "claude-sonnet-4-20250514",
+    "models": [
+      {
+        "id": "claude-sonnet-4-20250514",
+        "name": "Claude Sonnet 4 (最新)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 200000,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "claude-opus-4-20250514",
+        "name": "Claude Opus 4 (旗舰)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 200000,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "claude-3-5-haiku-20241022",
+        "name": "Claude 3.5 Haiku (快速)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 200000,
+        "maxTokens": 8192,
+        "compat": {}
+      }
+    ]
+  },
+  "gemini": {
+    "label": "Google Gemini",
+    "baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "defaultModel": "gemini-2.5-flash",
+    "models": [
+      {
+        "id": "gemini-2.5-flash",
+        "name": "Gemini 2.5 Flash (推荐)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536,
+        "compat": {}
+      },
+      {
+        "id": "gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro (旗舰)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 65536,
+        "compat": {}
+      },
+      {
+        "id": "gemini-2.0-flash",
+        "name": "Gemini 2.0 Flash",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 1048576,
+        "maxTokens": 8192,
+        "compat": {}
+      }
+    ]
+  },
+  "xai": {
+    "label": "xAI Grok",
+    "baseUrl": "https://api.x.ai/v1",
+    "defaultModel": "grok-3-mini",
+    "models": [
+      {
+        "id": "grok-3-mini",
+        "name": "Grok 3 Mini (快速)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "grok-3",
+        "name": "Grok 3 (旗舰)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384,
+        "compat": {}
+      },
+      {
+        "id": "grok-3-mini-fast",
+        "name": "Grok 3 Mini Fast",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 16384,
+        "compat": {}
+      }
+    ]
+  },
+  "moonshot": {
+    "label": "Moonshot/Kimi",
+    "baseUrl": "https://api.moonshot.cn/v1",
+    "defaultModel": "moonshot-v1-auto",
+    "models": [
+      {
+        "id": "moonshot-v1-auto",
+        "name": "Kimi (自动选择)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "moonshot-v1-8k",
+        "name": "Kimi 8K",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 8192,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "moonshot-v1-32k",
+        "name": "Kimi 32K",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 32768,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "moonshot-v1-128k",
+        "name": "Kimi 128K",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 4096,
+        "compat": {}
+      }
+    ]
+  },
+  "qwen": {
+    "label": "通义千问 (阿里云)",
+    "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "defaultModel": "qwen-turbo-latest",
+    "models": [
+      {
+        "id": "qwen-turbo-latest",
+        "name": "Qwen Turbo (快速)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "qwen-plus-latest",
+        "name": "Qwen Plus (均衡)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "qwen-max-latest",
+        "name": "Qwen Max (旗舰)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "qwen-vl-plus",
+        "name": "Qwen VL Plus (视觉)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 8192,
+        "maxTokens": 4096,
+        "compat": {}
+      }
+    ]
+  },
+  "yi": {
+    "label": "零一万物 (Yi)",
+    "baseUrl": "https://api.lingyiwanwu.com/v1",
+    "defaultModel": "yi-lightning",
+    "models": [
+      {
+        "id": "yi-lightning",
+        "name": "Yi Lightning (快速)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 16384,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "yi-large",
+        "name": "Yi Large (旗舰)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 32768,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "yi-medium",
+        "name": "Yi Medium (均衡)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 16384,
+        "maxTokens": 4096,
+        "compat": {}
+      },
+      {
+        "id": "yi-vision",
+        "name": "Yi Vision (视觉)",
+        "input": [
+          "text",
+          "image"
+        ],
+        "contextWindow": 16384,
+        "maxTokens": 4096,
+        "compat": {}
+      }
+    ]
+  },
+  "siliconflow": {
+    "label": "硅基流动 SiliconFlow",
+    "baseUrl": "https://api.siliconflow.cn/v1",
+    "defaultModel": "deepseek-ai/DeepSeek-V3",
+    "models": [
+      {
+        "id": "deepseek-ai/DeepSeek-V3",
+        "name": "DeepSeek V3 (免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 65536,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "deepseek-ai/DeepSeek-R1",
+        "name": "DeepSeek R1 (免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 65536,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "Qwen/Qwen2.5-72B-Instruct",
+        "name": "Qwen 2.5 72B (免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 8192,
+        "compat": {}
+      },
+      {
+        "id": "THUDM/glm-4-9b-chat",
+        "name": "GLM-4 9B (免费)",
+        "input": [
+          "text"
+        ],
+        "contextWindow": 131072,
+        "maxTokens": 4096,
+        "compat": {}
+      }
+    ]
+  }
+}

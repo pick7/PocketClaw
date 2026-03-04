@@ -22,3 +22,14 @@ data/credentials/*
 # 加密密钥
 secrets/*.key
 secrets/*.pem
+
+# Windows 专用脚本（容器内不需要）
+scripts/*.bat
+scripts/*.ps1
+
+# 文档文件（构建镜像不需要）
+使用指南.txt
+README.md
+LICENSE.md
+*.command
+*.bat

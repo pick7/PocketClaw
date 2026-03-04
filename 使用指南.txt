@@ -16,7 +16,7 @@
 
 【安装前提】
 
-  v1.2.3 已实现全自动安装，首次启动会自动检测并安装所需软件：
+  v1.2.5 已实现全自动安装，首次启动会自动检测并安装所需软件：
   - Docker Desktop（使用 U 盘内置安装包）
   - WSL2（Windows 子系统，Docker 运行必需）
   - Git（源码下载和加密工具）
@@ -85,41 +85,74 @@
   二、macOS 使用指南
 =====================================================================
 
-【安装前提（只需做一次）】
-
-  1. 安装 Docker Desktop
-     命令行方式（推荐）：打开"终端"，输入：
-       brew install --cask docker
-     手动方式：https://www.docker.com/products/docker-desktop/ 下载安装
-     安装后在"应用程序"中打开 Docker，等待它启动完成。
-
-  2. 验证安装
-     打开终端输入：
-       docker --version
-       docker compose version
-
-  提示：OpenSSL macOS 系统自带，Docker 镜像加速器会在启动时自动配置，无需手动操作。
-
-
 【首次使用】
 
-  方式一（推荐）：统一启动器
-    1. 插入 U 盘
-    2. 打开 U 盘中的 PocketClaw 文件夹
-    3. 双击 PocketClaw.command
-       （首次可能提示"无法验证开发者"，右键点击 → 选择"打开"即可）
-    4. 在菜单中选择 [1] 启动
-       - 首次会自动引导你运行配置向导（全中文提问）
-    5. 输入 Master Password
-    6. 等待容器启动
-    7. 浏览器自动打开聊天界面
-       地址: http://127.0.0.1:18789/chat#token=pocketclaw
+  1. 插入 U 盘
+  2. 打开 U 盘中的 PocketClaw 文件夹
+  3. 双击 PocketClaw.command
+     ⚠️ 首次打开可能被 macOS 安全机制拦截（见下方"安全提示"）
+  4. 脚本会自动检测 Docker，未安装的话会自动安装
+     - 优先通过 Homebrew 安装（最可靠）
+     - 没有 Homebrew 会自动安装 Homebrew 再装 Docker
+     - 首次自动安装可能需要 5-10 分钟
+  5. 在菜单中选择 [1] 启动
+     - 首次会自动引导你运行配置向导（全中文提问）
+     - 第 1 步：输入 API Key（智谱免费申请）
+     - 第 2 步：设置 Master Password 并自动加密保护
+  6. 输入 Master Password
+  7. 等待容器启动
+  8. 浏览器自动打开聊天界面
+     地址: http://127.0.0.1:18789/chat#token=pocketclaw
 
-  方式二：手动分步操作（在终端中运行）
-    1. cd /Volumes/你的U盘/PocketClaw
-    2. bash scripts/setup-env.sh      → 配置向导
-    3. bash scripts/encrypt-secrets.sh → 加密
-    4. bash scripts/start.sh           → 启动
+
+【⚠️ 安全提示 — 首次打开被 macOS 拦截】
+
+  双击 PocketClaw.command 后，macOS 可能弹出安全提示。
+  不同系统版本的解决方法不同：
+
+  方法一（macOS 14 及更早版本）：
+    弹窗通常有"打开"按钮：
+    → 右键点击 PocketClaw.command → 选择"打开" → 弹窗中点击"打开"
+
+  方法二（macOS 15 Sequoia 及更新版本）：
+    弹窗只有"完成"和"移到废纸篓"，没有"打开"按钮：
+    → 点击"完成"（不要点"移到废纸篓"！）
+    → 打开"系统设置" → 点击"隐私与安全性"
+    → 向下滚动，找到 PocketClaw.command 被拦截的提示
+    → 点击"仍要打开" → 输入开机密码确认
+
+  方法三（终端命令，适用于所有版本）：
+    打开"终端"，粘贴以下命令（注意替换 U 盘名称）：
+      xattr -d com.apple.quarantine /Volumes/你的U盘名/PocketClaw/PocketClaw.command
+    然后再双击 PocketClaw.command 即可正常打开。
+
+  提示：只需处理一次，之后不会再拦截。
+
+
+【Docker 安装失败？】
+
+  脚本会自动安装 Docker Desktop，但如遇网络问题导致失败：
+
+  方法一（推荐）：通过 Homebrew 手动安装
+    打开"终端"，输入：
+      brew install --cask docker
+    如果 Homebrew 也没有安装，先执行：
+      /bin/bash -c "$(curl -fsSL https://gitee.com/ineo6/homebrew-install/raw/master/install.sh)"
+    装好 Homebrew 后再运行上面的 brew install 命令。
+
+  方法二：手动下载安装
+    打开浏览器访问: https://www.docker.com/products/docker-desktop/
+    下载后打开 .dmg，将 Docker 拖入"Applications"文件夹。
+
+  安装完成后在"应用程序"中打开 Docker Desktop，等待它启动完成，
+  然后重新双击 PocketClaw.command 即可。
+
+  验证安装（可选）：
+    打开终端输入：
+      docker --version
+      docker compose version
+
+  提示：OpenSSL macOS 系统自带，Docker 镜像加速器会在启动时自动配置，无需手动操作。
 
 
 【日常使用】
@@ -131,6 +164,11 @@
 
   小提示：macOS 会在 U 盘上生成隐藏文件（._开头、.DS_Store 等），
   这些对功能没有影响。可以在菜单中选 [8] 清理。
+
+
+【改配置】
+
+  换 API Key → 双击 PocketClaw.command → 选 [4]
 
 
 【macOS 脚本速查】
@@ -297,7 +335,12 @@
 =====================================================================
 
   Q1: 提示 "docker not found"
-  → Docker Desktop 未安装或未加入 PATH。重新安装 Docker Desktop。
+  → Docker Desktop 未安装。v1.2.5 的启动脚本会自动安装，如自动安装失败，
+    请参考上方「macOS 使用指南 → Docker 安装失败？」部分手动安装。
+
+  Q1.5: macOS 双击 PocketClaw.command 被拦截，提示"无法验证"
+  → 这是 macOS 的安全保护机制，请参考上方「macOS 使用指南 → 安全提示」部分。
+    简要方法："系统设置" → "隐私与安全性" → 向下滚动找到拦截提示 → "仍要打开"
 
   Q2: 提示 "Docker Desktop 未运行"
   → 在任务栏找到 Docker 图标，右键 → 启动。
@@ -323,7 +366,7 @@
 
   Q6: 启动时报 "connection timeout" 或 "auth.docker.io" 错误
   → 国内网络无法直接访问 Docker Hub。
-  → v1.2.3 启动脚本会自动检测并配置镜像加速器。
+  → v1.2.5 启动脚本会自动检测并配置镜像加速器。
   → 如果自动配置未生效，可手动配置：
     Windows/macOS: Docker Desktop → Settings → Docker Engine，
     在 JSON 最后一个 } 之前加上（注意前面的逗号）：
@@ -359,7 +402,7 @@
   七、聊天频道配置（可选）
 =====================================================================
 
-  PocketClaw v1.2.3 支持 11 种聊天频道：
+  PocketClaw v1.2.5 支持 11 种聊天频道：
 
   WebChat（内置，默认开启）、Telegram、Discord、Slack、WhatsApp、
   Signal、Google Chat、Microsoft Teams、Matrix、BlueBubbles (iMessage)、Zalo
@@ -374,7 +417,7 @@
 
 
 =====================================================================
-PocketClaw v1.2.3 | 最后更新: 2026-03-03
+PocketClaw v1.2.5 | 最后更新: 2026-03-04
 =====================================================================
 
 

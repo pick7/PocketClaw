@@ -7,16 +7,12 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 ENV_FILE="$PROJECT_DIR/.env"
 ENC_FILE="$PROJECT_DIR/secrets/.env.encrypted"
 SECRETS_DIR="$PROJECT_DIR/secrets"
-
-# --------------- 颜色函数 ---------------
-red()   { printf "\033[31m%s\033[0m\n" "$*"; }
-green() { printf "\033[32m%s\033[0m\n" "$*"; }
-yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
 
 # ── 无论正常退出还是异常退出，都清理密码变量 ──
 trap 'unset MASTER_PASS MASTER_PASS_CONFIRM 2>/dev/null' EXIT
@@ -57,6 +53,12 @@ if [ -z "$MASTER_PASS" ]; then
     exit 1
 fi
 
+# 密码长度校验（至少6个字符）
+if [ ${#MASTER_PASS} -lt 6 ]; then
+    red "[错误] 密码太短, 至少需要 6 个字符."
+    exit 1
+fi
+
 # --------------- 确保 secrets 目录存在 ---------------
 mkdir -p "$SECRETS_DIR"
 
@@ -64,12 +66,15 @@ mkdir -p "$SECRETS_DIR"
 echo ""
 yellow "[信息] 正在加密 .env → secrets/.env.encrypted ..."
 
-# 通过 stdin 传递密码，避免 ps aux 可见
-if printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
-    -in "$ENV_FILE" \
-    -out "$ENC_FILE" \
-    -pass stdin; then
-    green "[OK] 加密成功!"
+if encrypt_env_file "$ENV_FILE" "$ENC_FILE" "$MASTER_PASS"; then
+    # 验证: 用同一密码试解密, 确保密文正确
+    if decrypt_env_file "$ENC_FILE" "/dev/stdout" "$MASTER_PASS" | diff -q - "$ENV_FILE" &>/dev/null; then
+        green "[OK] 加密成功! (已验证密文完整性)"
+    else
+        red "[错误] 加密验证失败! 密文可能损坏, 请重试."
+        rm -f "$ENC_FILE"
+        exit 1
+    fi
     echo "  加密文件: $ENC_FILE"
     echo ""
     yellow "[建议] 加密完成后, 建议删除明文 .env 文件以提高安全性:"

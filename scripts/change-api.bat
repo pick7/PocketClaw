@@ -2,7 +2,6 @@
 setlocal EnableDelayedExpansion
 REM ============================================================
 REM change-api.bat  —— 切换 AI 模型提供商 / 更新 API Key
-REM 支持: 智谱/DeepSeek/Moonshot/通义千问/零一万物/硅基流动
 REM ============================================================
 
 set "SCRIPT_DIR=%~dp0"
@@ -54,48 +53,98 @@ echo   [6] 硅基流动          (免费开源模型聚合)
 echo       DeepSeek V3/R1 / Qwen / GLM (均免费)
 echo       注册: https://cloud.siliconflow.cn
 echo.
+echo   [7] 智谱 AI (付费高级) GLM-4-Plus / GLM-4-Long
+echo       注册: https://open.bigmodel.cn
+echo.
+echo   [8] OpenAI             GPT-4o / GPT-4.1 / o3-mini
+echo       注册: https://platform.openai.com
+echo.
+echo   [9] Anthropic Claude   Claude Sonnet 4 / Opus 4
+echo       注册: https://console.anthropic.com
+echo.
+echo  [10] Google Gemini      Gemini 2.5 Flash / Pro
+echo       注册: https://aistudio.google.com
+echo.
+echo  [11] xAI Grok           Grok 3 / Grok 3 Mini
+echo       注册: https://console.x.ai
+echo.
 echo   [0] 仅更新当前 API Key (不切换提供商)
 echo.
-choice /c 1234560 /n /m "请选择 [0-6]: "
-set "MENU_CHOICE=!ERRORLEVEL!"
 
-if !MENU_CHOICE! equ 7 goto :update_key_only
+:ask_menu
+set "MENU_CHOICE="
+set /p "MENU_CHOICE=请选择 [0-11]: "
+if "!MENU_CHOICE!"=="0" goto :update_key_only
 
-if !MENU_CHOICE! equ 1 (
+if "!MENU_CHOICE!"=="1" (
     set "PROV=zhipu"
     set "PROV_NAME=智谱 AI"
     set "DEFAULT_MODEL=glm-4.7-flash"
     set "KEY_URL=https://open.bigmodel.cn/usercenter/apikeys"
 )
-if !MENU_CHOICE! equ 2 (
+if "!MENU_CHOICE!"=="2" (
     set "PROV=deepseek"
     set "PROV_NAME=DeepSeek"
     set "DEFAULT_MODEL=deepseek-chat"
     set "KEY_URL=https://platform.deepseek.com/api_keys"
 )
-if !MENU_CHOICE! equ 3 (
+if "!MENU_CHOICE!"=="3" (
     set "PROV=moonshot"
     set "PROV_NAME=Moonshot/Kimi"
     set "DEFAULT_MODEL=moonshot-v1-auto"
     set "KEY_URL=https://platform.moonshot.cn/console/api-keys"
 )
-if !MENU_CHOICE! equ 4 (
+if "!MENU_CHOICE!"=="4" (
     set "PROV=qwen"
     set "PROV_NAME=通义千问 Qwen"
     set "DEFAULT_MODEL=qwen-turbo-latest"
     set "KEY_URL=https://dashscope.console.aliyun.com/apiKey"
 )
-if !MENU_CHOICE! equ 5 (
+if "!MENU_CHOICE!"=="5" (
     set "PROV=yi"
     set "PROV_NAME=零一万物 Yi"
     set "DEFAULT_MODEL=yi-lightning"
     set "KEY_URL=https://platform.lingyiwanwu.com/apikeys"
 )
-if !MENU_CHOICE! equ 6 (
+if "!MENU_CHOICE!"=="6" (
     set "PROV=siliconflow"
     set "PROV_NAME=硅基流动 SiliconFlow"
     set "DEFAULT_MODEL=deepseek-ai/DeepSeek-V3"
     set "KEY_URL=https://cloud.siliconflow.cn/account/ak"
+)
+if "!MENU_CHOICE!"=="7" (
+    set "PROV=zhipu-pro"
+    set "PROV_NAME=智谱 AI (付费高级)"
+    set "DEFAULT_MODEL=glm-4-plus"
+    set "KEY_URL=https://open.bigmodel.cn/usercenter/apikeys"
+)
+if "!MENU_CHOICE!"=="8" (
+    set "PROV=openai"
+    set "PROV_NAME=OpenAI"
+    set "DEFAULT_MODEL=gpt-4o"
+    set "KEY_URL=https://platform.openai.com/api-keys"
+)
+if "!MENU_CHOICE!"=="9" (
+    set "PROV=anthropic"
+    set "PROV_NAME=Anthropic Claude"
+    set "DEFAULT_MODEL=claude-sonnet-4-20250514"
+    set "KEY_URL=https://console.anthropic.com/settings/keys"
+)
+if "!MENU_CHOICE!"=="10" (
+    set "PROV=gemini"
+    set "PROV_NAME=Google Gemini"
+    set "DEFAULT_MODEL=gemini-2.5-flash"
+    set "KEY_URL=https://aistudio.google.com/apikey"
+)
+if "!MENU_CHOICE!"=="11" (
+    set "PROV=xai"
+    set "PROV_NAME=xAI Grok"
+    set "DEFAULT_MODEL=grok-3-mini"
+    set "KEY_URL=https://console.x.ai"
+)
+if not defined PROV (
+    echo   [错误] 无效选择
+    goto :ask_menu
 )
 
 echo.
@@ -115,7 +164,7 @@ if "!NEW_KEY!"=="" (
 echo.
 echo [信息] 正在保存配置...
 
-REM 写入 workspace/.provider (entrypoint.sh 读取此文件)
+REM 写入 workspace/.provider
 (
 echo # PocketClaw Provider Config
 echo PROVIDER_NAME=!PROV!
@@ -125,7 +174,7 @@ echo MODEL_ID=!DEFAULT_MODEL!
 
 echo   [OK] 提供商配置已保存
 
-REM 同时更新 .env (保持一致)
+REM 同时更新 .env
 call :do_update_env
 goto :restart_prompt
 
@@ -143,12 +192,37 @@ if not exist "%ENV_FILE%" (
             -in "%ENC_FILE%" -out "%ENV_FILE%" -pass stdin 2>nul
         if errorlevel 1 (
             echo [错误] 解密失败。
-            popd & pause & exit /b 1
+            popd ^& pause ^& exit /b 1
         )
         set "NEED_REENCRYPT=1"
     ) else (
         echo [错误] 未找到配置文件，请先运行 setup-env.bat
-        popd & pause & exit /b 1
+        popd ^& pause ^& exit /b 1
+    )
+) else (
+    set "NEED_REENCRYPT=0"
+)
+
+REM ============================================================
+:update_key_only
+REM 仅更新 API Key (不切换提供商)
+echo.
+
+REM 如果 .env 不存在，先解密
+if not exist "%ENV_FILE%" (
+    if exist "%ENC_FILE%" (
+        echo [信息] 正在解密 .env ...
+        for /f "delims=" %%p in ('powershell -NoProfile -Command "$p = Read-Host -Prompt '  Master Password' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))"') do set "MASTER_PASS=%%p"
+        <nul set /p ="!MASTER_PASS!"| openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 ^
+            -in "%ENC_FILE%" -out "%ENV_FILE%" -pass stdin 2>nul
+        if errorlevel 1 (
+            echo [错误] 解密失败。
+            popd ^& pause ^& exit /b 1
+        )
+        set "NEED_REENCRYPT=1"
+    ) else (
+        echo [错误] 未找到配置文件，请先运行 setup-env.bat
+        popd ^& pause ^& exit /b 1
     )
 ) else (
     set "NEED_REENCRYPT=0"
@@ -168,7 +242,7 @@ REM 更新 .env 中的 key
 powershell -NoProfile -Command "(Get-Content '%ENV_FILE%') -replace '^(OPENAI_API_KEY|ZHIPU_API_KEY)=.*', 'OPENAI_API_KEY=!NEW_KEY!' | Set-Content '%ENV_FILE%'"
 echo   [OK] API Key 已更新
 
-REM 同时更新 workspace/.provider (如果存在)
+REM 同时更新 workspace/.provider
 if exist "!PROVIDER_FILE!" (
     powershell -NoProfile -Command "(Get-Content '!PROVIDER_FILE!') -replace '^API_KEY=.*', 'API_KEY=!NEW_KEY!' | Set-Content '!PROVIDER_FILE!'"
     echo   [OK] Provider 配置已同步
@@ -180,7 +254,7 @@ if "!NEED_REENCRYPT!"=="1" (
     <nul set /p ="!MASTER_PASS!"| openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 ^
         -in "%ENV_FILE%" -out "%ENC_FILE%" -pass stdin 2>nul
     if errorlevel 1 (
-        echo [警告] 重新加密失败。
+        echo [错误] 重新加密失败。
     ) else (
         echo   [OK] 已重新加密
     )
@@ -218,7 +292,7 @@ if "!NEED_REENCRYPT!"=="1" (
     <nul set /p ="!MASTER_PASS!"| openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 ^
         -in "%ENV_FILE%" -out "%ENC_FILE%" -pass stdin 2>nul
     if errorlevel 1 (
-        echo [警告] 重新加密失败。
+        echo [错误] 重新加密失败。
     ) else (
         echo   [OK] 已重新加密
     )

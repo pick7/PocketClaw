@@ -11,13 +11,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 CHECKSUM_FILE="$PROJECT_DIR/scripts/.checksums.sha256"
-
-# ── 颜色 ──
-red()   { printf "\033[31m%s\033[0m\n" "$*"; }
-green() { printf "\033[32m%s\033[0m\n" "$*"; }
-yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
 
 # ── 需要校验的关键文件 ──
 FILES=(

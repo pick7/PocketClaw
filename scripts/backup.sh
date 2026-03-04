@@ -7,17 +7,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # 备份目标目录 (可通过参数覆盖)
 BACKUP_DIR="${1:-$HOME/PocketClaw_Backup}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 SNAPSHOT_DIR="$BACKUP_DIR/snapshot_$TIMESTAMP"
-
-# --------------- 颜色函数 ---------------
-red()   { printf "\033[31m%s\033[0m\n" "$*"; }
-green() { printf "\033[32m%s\033[0m\n" "$*"; }
-yellow(){ printf "\033[33m%s\033[0m\n" "$*"; }
 
 echo ""
 yellow "=== PocketClaw 备份工具 ==="

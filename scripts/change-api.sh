@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ============================================================
 # change-api.sh  —— 切换 AI 模型提供商 / 更新 API Key (macOS/Linux)
-# 支持: 智谱/DeepSeek/Moonshot/通义千问/零一万物/硅基流动
+# 支持: 智谱/DeepSeek/OpenAI/Claude/Gemini/Grok/Moonshot/通义千问/零一万物/硅基流动
 # ============================================================
 set -euo pipefail
 
@@ -48,9 +48,24 @@ echo "  [6] 硅基流动          (免费开源模型聚合)"
 echo "      DeepSeek V3/R1 / Qwen / GLM (均免费)"
 echo "      注册: https://cloud.siliconflow.cn"
 echo ""
+echo "  [7] 智谱 AI (付费高级) GLM-4-Plus / GLM-4-Long"
+echo "      注册: https://open.bigmodel.cn"
+echo ""
+echo "  [8] OpenAI             GPT-4o / GPT-4.1 / o3-mini"
+echo "      注册: https://platform.openai.com"
+echo ""
+echo "  [9] Anthropic Claude   Claude Sonnet 4 / Opus 4"
+echo "      注册: https://console.anthropic.com"
+echo ""
+echo " [10] Google Gemini      Gemini 2.5 Flash / Pro"
+echo "      注册: https://aistudio.google.com"
+echo ""
+echo " [11] xAI Grok           Grok 3 / Grok 3 Mini"
+echo "      注册: https://console.x.ai"
+echo ""
 echo "  [0] 仅更新当前 API Key (不切换提供商)"
 echo ""
-read -rp "请选择 [0-6]: " MENU_CHOICE
+read -rp "请选择 [0-11]: " MENU_CHOICE
 
 # ── 解密 .env 的公共函数 ──
 do_decrypt() {
@@ -63,8 +78,7 @@ do_decrypt() {
                 echo "[错误] 密码不能为空。"
                 exit 1
             fi
-            if ! printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 \
-                -in "$ENC_FILE" -out "$ENV_FILE" -pass stdin 2>/dev/null; then
+            if ! decrypt_env_file "$ENC_FILE" "$ENV_FILE" "$MASTER_PASS"; then
                 echo "[错误] 解密失败，密码可能不正确。"
                 rm -f "$ENV_FILE"
                 exit 1
@@ -84,8 +98,7 @@ do_reencrypt_and_cleanup() {
     if [ "$NEED_REENCRYPT" -eq 1 ]; then
         echo ""
         echo "[信息] 重新加密 .env ..."
-        if printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 \
-            -in "$ENV_FILE" -out "$ENC_FILE" -pass stdin 2>/dev/null; then
+        if encrypt_env_file "$ENV_FILE" "$ENC_FILE" "$MASTER_PASS"; then
             echo "[OK] 已重新加密"
         else
             echo "[错误] 重新加密失败！明文 .env 已保留，请手动处理。"
@@ -109,20 +122,11 @@ if [ "$MENU_CHOICE" = "0" ]; then
     if [ -z "$NEW_KEY" ]; then
         echo "  未修改。"
     else
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-            sed -i '' "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        else
-            sed -i "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-            sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        fi
+        sed_inplace "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
+        sed_inplace "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
         # 同步 .provider 文件
         if [ -f "$PROVIDER_FILE" ]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s|^API_KEY=.*|API_KEY=$NEW_KEY|" "$PROVIDER_FILE"
-            else
-                sed -i "s|^API_KEY=.*|API_KEY=$NEW_KEY|" "$PROVIDER_FILE"
-            fi
+            sed_inplace "s|^API_KEY=.*|API_KEY=$NEW_KEY|" "$PROVIDER_FILE"
             echo "  [OK] Provider 配置已同步"
         fi
         echo "  [OK] API Key 已更新"
@@ -141,6 +145,11 @@ case "$MENU_CHOICE" in
     4) PROV="qwen";        PROV_NAME="通义千问 Qwen";         DEFAULT_MODEL="qwen-turbo-latest";         KEY_URL="https://dashscope.console.aliyun.com/apiKey" ;;
     5) PROV="yi";          PROV_NAME="零一万物 Yi";            DEFAULT_MODEL="yi-lightning";              KEY_URL="https://platform.lingyiwanwu.com/apikeys" ;;
     6) PROV="siliconflow"; PROV_NAME="硅基流动 SiliconFlow";   DEFAULT_MODEL="deepseek-ai/DeepSeek-V3";  KEY_URL="https://cloud.siliconflow.cn/account/ak" ;;
+    7) PROV="zhipu-pro";   PROV_NAME="智谱 AI (付费高级)";   DEFAULT_MODEL="glm-4-plus";              KEY_URL="https://open.bigmodel.cn/usercenter/apikeys" ;;
+    8) PROV="openai";      PROV_NAME="OpenAI";               DEFAULT_MODEL="gpt-4o";                  KEY_URL="https://platform.openai.com/api-keys" ;;
+    9) PROV="anthropic";   PROV_NAME="Anthropic Claude";     DEFAULT_MODEL="claude-sonnet-4-20250514"; KEY_URL="https://console.anthropic.com/settings/keys" ;;
+   10) PROV="gemini";      PROV_NAME="Google Gemini";        DEFAULT_MODEL="gemini-2.5-flash";        KEY_URL="https://aistudio.google.com/apikey" ;;
+   11) PROV="xai";         PROV_NAME="xAI Grok";             DEFAULT_MODEL="grok-3-mini";             KEY_URL="https://console.x.ai" ;;
     *) echo "  无效选择"; exit 1 ;;
 esac
 
@@ -170,17 +179,10 @@ echo "  [OK] 提供商配置已保存"
 # 更新 .env
 do_decrypt
 if [ -f "$ENV_FILE" ]; then
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        sed -i '' "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        sed -i '' "s|^PROVIDER_NAME=.*|PROVIDER_NAME=$PROV|" "$ENV_FILE"
-        sed -i '' "s|^OPENCLAW_MODEL=.*|OPENCLAW_MODEL=$DEFAULT_MODEL|" "$ENV_FILE"
-    else
-        sed -i "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        sed -i "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
-        sed -i "s|^PROVIDER_NAME=.*|PROVIDER_NAME=$PROV|" "$ENV_FILE"
-        sed -i "s|^OPENCLAW_MODEL=.*|OPENCLAW_MODEL=$DEFAULT_MODEL|" "$ENV_FILE"
-    fi
+    sed_inplace "s|^ZHIPU_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
+    sed_inplace "s|^OPENAI_API_KEY=.*|OPENAI_API_KEY=$NEW_KEY|" "$ENV_FILE"
+    sed_inplace "s|^PROVIDER_NAME=.*|PROVIDER_NAME=$PROV|" "$ENV_FILE"
+    sed_inplace "s|^OPENCLAW_MODEL=.*|OPENCLAW_MODEL=$DEFAULT_MODEL|" "$ENV_FILE"
 else
     cat > "$ENV_FILE" << EOF
 COMPOSE_PROJECT_NAME=pocketclaw

@@ -1,0 +1,54 @@
+# PocketClaw EditorConfig
+# 统一编辑器行为，确保编码/行尾/缩进一致
+# 参考：开发备忘.md 第1-4节
+
+root = true
+
+# 默认：UTF-8 + LF
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Shell 脚本：UTF-8 + LF（Docker/Linux 强制要求）
+[*.sh]
+charset = utf-8
+end_of_line = lf
+
+# Batch 脚本：GBK + CRLF（Windows CMD 强制要求）
+# 注意：charset=latin1 是最接近 GBK 的通用标记
+# 实际操作仍需手动确保 GBK 编码（参考 开发备忘.md 第1节）
+[*.bat]
+charset = latin1
+end_of_line = crlf
+
+# PowerShell
+[*.ps1]
+charset = utf-8-bom
+end_of_line = crlf
+
+# Dockerfile / docker-compose
+[Dockerfile*]
+indent_size = 2
+
+[docker-compose.yml]
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+
+# JSON
+[*.json]
+indent_size = 2
+
+# HTML / JS / CSS
+[*.{html,js,css}]
+indent_size = 2
+
+# 使用指南：UTF-8 with BOM（Windows 记事本兼容）
+[使用指南.txt]
+charset = utf-8-bom

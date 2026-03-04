@@ -10,8 +10,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "$SCRIPT_DIR/_common.sh"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# ── 无论正常退出还是异常退出，都清理密码变量 ──
-trap 'unset MASTER_PASS 2>/dev/null' EXIT
+# ── 无论正常退出还是异常退出，都清理密码变量和明文 .env ──
+cleanup_on_exit() {
+    unset MASTER_PASS 2>/dev/null
+    # 如果存在加密文件，退出时确保明文 .env 被清理
+    if [ -f "$PROJECT_DIR/secrets/.env.encrypted" ] && [ -f "$PROJECT_DIR/.env" ]; then
+        secure_wipe "$PROJECT_DIR/.env" 2>/dev/null
+    fi
+}
+trap cleanup_on_exit EXIT INT TERM
 ENC_FILE="$PROJECT_DIR/secrets/.env.encrypted"
 
 echo "============================================"
@@ -57,51 +64,130 @@ wait_for_docker() {
     done
 }
 
+# ── 安装 Docker Desktop DMG（macOS 辅助函数）──
+install_docker_dmg() {
+    local arch_name="arm64"
+    [[ "$(uname -m)" != "arm64" ]] && arch_name="amd64"
+    local DMG_FILE="/tmp/Docker.dmg"
+    local DMG_URL="https://desktop.docker.com/mac/main/${arch_name}/Docker.dmg"
+    echo "[信息] 正在直接下载 Docker Desktop..."
+    echo "       架构: $(uname -m)"
+    echo "       文件较大（~600MB），请耐心等待..."
+    echo ""
+    if ! curl -fSL --connect-timeout 15 --retry 2 --progress-bar -o "$DMG_FILE" "$DMG_URL"; then
+        rm -f "$DMG_FILE"
+        return 1
+    fi
+    echo ""
+    echo "[信息] 正在安装 Docker Desktop 到 /Applications..."
+    hdiutil attach "$DMG_FILE" -nobrowse -quiet
+    if ! cp -R "/Volumes/Docker/Docker.app" /Applications/ 2>/dev/null; then
+        echo "[信息] 需要管理员权限，请输入 Mac 开机密码:"
+        sudo cp -R "/Volumes/Docker/Docker.app" /Applications/
+    fi
+    hdiutil detach "/Volumes/Docker" -quiet 2>/dev/null || true
+    rm -f "$DMG_FILE"
+    return 0
+}
+
 # ── 检查 Docker ──
 if ! command -v docker &>/dev/null; then
     echo "[警告] 未检测到 Docker！正在自动安装..."
     echo ""
     if [[ "$(uname)" == "Darwin" ]]; then
-        # macOS: 优先用 brew，没有则直接下载 DMG
-        if command -v brew &>/dev/null; then
-            echo "[信息] 正在通过 Homebrew 安装 Docker Desktop..."
-            brew install --cask docker
-        else
-            echo "[信息] 正在直接下载 Docker Desktop..."
-            if [[ "$(uname -m)" == "arm64" ]]; then
-                DMG_URL="https://desktop.docker.com/mac/main/arm64/Docker.dmg"
-            else
-                DMG_URL="https://desktop.docker.com/mac/main/amd64/Docker.dmg"
-            fi
-            DMG_FILE="/tmp/Docker.dmg"
-            echo "       架构: $(uname -m)"
-            echo "       下载地址: $DMG_URL"
-            echo "       文件较大（~600MB），请耐心等待..."
+        DOCKER_INSTALLED=false
+        DOCKER_ENGINE=""              # "desktop" 或 "colima"
+
+        # ── 确保 Homebrew 可用 ──
+        if ! command -v brew &>/dev/null; then
+            echo "[信息] 正在安装 Homebrew（macOS 包管理工具）..."
+            echo "       安装过程中可能需要按回车键确认，以及输入开机密码"
             echo ""
-            if ! curl -fSL --progress-bar -o "$DMG_FILE" "$DMG_URL"; then
-                echo ""
-                echo "[错误] Docker Desktop 下载失败！"
-                echo "       请手动下载安装: https://www.docker.com/products/docker-desktop/"
-                exit 1
+            # 优先国内镜像（更稳定）
+            if /bin/bash -c "$(curl -fsSL https://gitee.com/ineo6/homebrew-install/raw/master/install.sh)" 2>&1; then
+                true
+            # 备用：官方安装脚本
+            elif /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" 2>&1; then
+                true
             fi
-            echo ""
-            echo "[信息] 正在安装 Docker Desktop 到 /Applications..."
-            hdiutil attach "$DMG_FILE" -nobrowse -quiet
-            if ! cp -R "/Volumes/Docker/Docker.app" /Applications/ 2>/dev/null; then
-                echo "[信息] 需要管理员权限，请输入 Mac 开机密码:"
-                sudo cp -R "/Volumes/Docker/Docker.app" /Applications/
-            fi
-            hdiutil detach "/Volumes/Docker" -quiet 2>/dev/null || true
-            rm -f "$DMG_FILE"
+            # Apple Silicon: /opt/homebrew  |  Intel: /usr/local
+            eval "$(/opt/homebrew/bin/brew shellenv 2>/dev/null || /usr/local/bin/brew shellenv 2>/dev/null)" 2>/dev/null || true
         fi
-        echo "[OK] Docker Desktop 已安装"
-        echo ""
-        echo "[信息] 正在启动 Docker Desktop（首次启动可能需要授权）..."
-        open -a "Docker"
+
+        # ── 方案一：Homebrew 安装 Docker Desktop（最简单）──
+        if command -v brew &>/dev/null; then
+            echo "[信息] 方案 1/3：通过 Homebrew 安装 Docker Desktop..."
+            if brew install --cask docker 2>&1; then
+                DOCKER_INSTALLED=true
+                DOCKER_ENGINE="desktop"
+            else
+                echo "[警告] Docker Desktop 下载失败（docker.com 在国内可能被网络干扰）"
+                echo ""
+            fi
+        fi
+
+        # ── 方案二：Colima — 轻量级 Docker 运行时（绕过 docker.com）──
+        #    Colima 和 docker CLI 都是 Homebrew formula，走国内瓶子镜像，不受封锁影响
+        if ! $DOCKER_INSTALLED && command -v brew &>/dev/null; then
+            echo "[信息] 方案 2/3：安装 Colima（轻量级 Docker 运行时，无需 Docker Desktop）..."
+            echo "       Colima 通过 Homebrew 安装，下载源不受国内网络限制"
+            echo ""
+            if brew install colima docker docker-compose 2>&1; then
+                DOCKER_INSTALLED=true
+                DOCKER_ENGINE="colima"
+            else
+                echo "[警告] Colima 安装也失败了，尝试最后方案..."
+                echo ""
+            fi
+        fi
+
+        # ── 方案三：直接下载 DMG（备用）──
+        if ! $DOCKER_INSTALLED; then
+            echo "[信息] 方案 3/3：直接下载 Docker Desktop DMG..."
+            if install_docker_dmg; then
+                DOCKER_INSTALLED=true
+                DOCKER_ENGINE="desktop"
+            fi
+        fi
+
+        # ── 所有方案均失败 ──
+        if $DOCKER_INSTALLED; then
+            echo "[OK] Docker 已安装（引擎: ${DOCKER_ENGINE}）"
+            echo ""
+            if [[ "$DOCKER_ENGINE" == "colima" ]]; then
+                echo "[信息] 正在启动 Colima..."
+                colima start 2>&1 || true
+            else
+                echo "[信息] 正在启动 Docker Desktop（首次启动可能需要授权）..."
+                open -a "Docker"
+            fi
+        else
+            echo ""
+            echo "[错误] Docker 自动安装失败！"
+            echo ""
+            echo "  docker.com 在国内可能被网络干扰，建议以下方式："
+            echo "  ──────────────────────────────────────────────"
+            echo "  方式 A（推荐）开启 VPN 后重新运行本脚本"
+            echo ""
+            echo "  方式 B：手动安装 Docker Desktop"
+            echo "   1. 在浏览器中打开下载页面（已自动打开）"
+            echo "   2. 点击「Download for Mac」"
+            echo "   3. 打开下载的 .dmg → 将 Docker 拖入 Applications"
+            echo "   4. 打开 Docker Desktop，等待启动完成"
+            echo "   5. 重新运行 PocketClaw.command"
+            echo ""
+            open "https://www.docker.com/products/docker-desktop/" 2>/dev/null || true
+            echo ""
+            read -rp "  按回车返回菜单..." _
+            exit 1
+        fi
     else
         # Linux: 通过官方脚本安装
         echo "[信息] 正在通过官方脚本安装 Docker..."
-        curl -fsSL https://get.docker.com | sh
+        if ! curl -fsSL https://get.docker.com | sh; then
+            echo "[错误] Docker 安装失败！请手动安装: https://docs.docker.com/engine/install/"
+            exit 1
+        fi
         sudo usermod -aG docker "$USER" 2>/dev/null || true
         sudo systemctl start docker 2>/dev/null || true
         echo "[OK] Docker 已安装"
@@ -157,27 +243,29 @@ if [ -f "$SCRIPT_DIR/.checksums.sha256" ]; then
     echo ""
 fi
 
+# ── 交互式解密 .env.encrypted → .env ──
+decrypt_env() {
+    local prompt="${1:-请输入 Master Password: }"
+    read -s -p "$prompt" MASTER_PASS
+    echo ""
+    if [ -z "$MASTER_PASS" ]; then
+        echo "[错误] 密码不能为空。"
+        exit 1
+    fi
+    if ! decrypt_env_file "$ENC_FILE" "$PROJECT_DIR/.env" "$MASTER_PASS"; then
+        echo "[错误] 解密失败，密码可能不正确。"
+        rm -f "$PROJECT_DIR/.env"
+        exit 1
+    fi
+    unset MASTER_PASS
+    echo "[OK] 解密成功"
+}
+
 # ── 检查 .env ──
 if [ ! -f "$PROJECT_DIR/.env" ]; then
     if [ -f "$ENC_FILE" ]; then
         echo "[信息] 检测到加密配置，正在解密..."
-        read -s -p "请输入 Master Password: " MASTER_PASS
-        echo ""
-        if [ -z "$MASTER_PASS" ]; then
-            echo "[错误] 密码不能为空。"
-            exit 1
-        fi
-        # 通过 stdin 传递密码，避免 -pass pass: 在进程列表 (ps aux) 中泄露
-        if ! printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 \
-            -in "$ENC_FILE" \
-            -out "$PROJECT_DIR/.env" \
-            -pass stdin 2>/dev/null; then
-            echo "[错误] 解密失败，密码可能不正确。"
-            rm -f "$PROJECT_DIR/.env"
-            exit 1
-        fi
-        unset MASTER_PASS
-        echo "[OK] 解密成功"
+        decrypt_env
     else
         echo "[警告] 未找到 .env 配置文件！正在启动配置向导..."
         bash "$PROJECT_DIR/scripts/setup-env.sh" || true
@@ -186,22 +274,7 @@ if [ ! -f "$PROJECT_DIR/.env" ]; then
             if [ -f "$ENC_FILE" ]; then
                 echo ""
                 echo "[信息] 配置已加密保存，现在需要解密以启动..."
-                read -s -p "请输入 Master Password: " MASTER_PASS
-                echo ""
-                if [ -z "$MASTER_PASS" ]; then
-                    echo "[错误] 密码不能为空。"
-                    exit 1
-                fi
-                if ! printf '%s' "$MASTER_PASS" | openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 \
-                    -in "$ENC_FILE" \
-                    -out "$PROJECT_DIR/.env" \
-                    -pass stdin 2>/dev/null; then
-                    echo "[错误] 解密失败，密码可能不正确。"
-                    rm -f "$PROJECT_DIR/.env"
-                    exit 1
-                fi
-                unset MASTER_PASS
-                echo "[OK] 解密成功"
+                decrypt_env
             else
                 echo "[错误] 配置未完成。"
                 exit 1
@@ -334,13 +407,17 @@ BUILD_LOG="$PROJECT_DIR/data/logs/build.log"
 POCKETCLAW_VERSION=$(cat "$PROJECT_DIR/VERSION" 2>/dev/null || echo "unknown")
 echo "[信息] 正在检查更新..."
 VERSION_API="https://pocketclaw-1380766547.cos.ap-beijing.myqcloud.com/version.json"
+VERSION_API_BACKUP="https://raw.githubusercontent.com/pocketclaw/pocketclaw/main/version.json"
 LATEST_VER=""
 DOWNLOAD_URL=""
+DOWNLOAD_URL_BACKUP=""
 if command -v curl &>/dev/null; then
-    VERSION_JSON=$(curl -sf --connect-timeout 5 "$VERSION_API" 2>/dev/null || true)
+    VERSION_JSON=$(curl -sf --connect-timeout 5 "$VERSION_API" 2>/dev/null || \
+                   curl -sf --connect-timeout 5 "$VERSION_API_BACKUP" 2>/dev/null || true)
     if [ -n "$VERSION_JSON" ]; then
         LATEST_VER=$(echo "$VERSION_JSON" | grep -o '"latest"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
         DOWNLOAD_URL=$(echo "$VERSION_JSON" | grep -o '"download_url"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
+        DOWNLOAD_URL_BACKUP=$(echo "$VERSION_JSON" | grep -o '"download_url_backup"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/.*"\([^"]*\)"$/\1/')
     fi
 fi
 
@@ -363,7 +440,16 @@ else
         echo "[更新] 正在下载更新包..."
         UPDATE_ZIP="/tmp/PocketClaw-update.zip"
         UPDATE_DIR="/tmp/PocketClaw-update"
+        DL_OK=0
         if curl -sfL --connect-timeout 30 "$DOWNLOAD_URL" -o "$UPDATE_ZIP" 2>/dev/null; then
+            DL_OK=1
+        elif [ -n "$DOWNLOAD_URL_BACKUP" ]; then
+            echo "[信息] 主下载源不可用，尝试备用源..."
+            if curl -sfL --connect-timeout 30 "$DOWNLOAD_URL_BACKUP" -o "$UPDATE_ZIP" 2>/dev/null; then
+                DL_OK=1
+            fi
+        fi
+        if [ "$DL_OK" -eq 1 ]; then
             echo "[更新] 下载完成，正在解压..."
             rm -rf "$UPDATE_DIR"
             unzip -qo "$UPDATE_ZIP" -d "$UPDATE_DIR" 2>/dev/null || {
@@ -387,7 +473,7 @@ else
                 done
                 # 复制 scripts/
                 [ -d "$PAYLOAD/scripts" ] && cp -rf "$PAYLOAD/scripts/"* "$PROJECT_DIR/scripts/" 2>/dev/null
-                # 复制 config/ 下的所有文件（mobile.html, voice-chat.js 等）
+                # 复制 config/ 下的所有文件（mobile.html, openclaw.json 等）
                 [ -d "$PAYLOAD/config" ] && {
                     for cf in "$PAYLOAD/config"/*; do
                         if [ -f "$cf" ]; then
@@ -429,9 +515,9 @@ fi
 BUILD_HASH_FILE="$PROJECT_DIR/data/.build_hash"
 CURRENT_HASH=""
 if command -v md5sum &>/dev/null; then
-    CURRENT_HASH=$(cat "$PROJECT_DIR/Dockerfile.custom" "$PROJECT_DIR/scripts/entrypoint.sh" "$PROJECT_DIR/config/mobile.html" "$PROJECT_DIR/config/voice-chat.js" "$PROJECT_DIR/config/openclaw.json" "$PROJECT_DIR/VERSION" 2>/dev/null | md5sum | awk '{print $1}')
+    CURRENT_HASH=$(cat "$PROJECT_DIR/Dockerfile.custom" "$PROJECT_DIR/scripts/entrypoint.sh" "$PROJECT_DIR/config/mobile.html" "$PROJECT_DIR/config/openclaw.json" "$PROJECT_DIR/VERSION" 2>/dev/null | md5sum | awk '{print $1}')
 elif command -v md5 &>/dev/null; then
-    CURRENT_HASH=$(cat "$PROJECT_DIR/Dockerfile.custom" "$PROJECT_DIR/scripts/entrypoint.sh" "$PROJECT_DIR/config/mobile.html" "$PROJECT_DIR/config/voice-chat.js" "$PROJECT_DIR/config/openclaw.json" "$PROJECT_DIR/VERSION" 2>/dev/null | md5)
+    CURRENT_HASH=$(cat "$PROJECT_DIR/Dockerfile.custom" "$PROJECT_DIR/scripts/entrypoint.sh" "$PROJECT_DIR/config/mobile.html" "$PROJECT_DIR/config/openclaw.json" "$PROJECT_DIR/VERSION" 2>/dev/null | md5)
 fi
 
 PREV_HASH=""
