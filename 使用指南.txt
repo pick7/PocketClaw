@@ -42,7 +42,7 @@
     5. 输入你设置的 Master Password（加密密码）
     6. 等待容器启动（首次约 3-5 分钟）
     7. 浏览器自动打开聊天界面
-       地址: http://127.0.0.1:18789/chat#token=pocketclaw
+       地址: http://127.0.0.1:18789/chat#token=<启动时显示的Token>
 
   方式二：手动分步操作
     1. 双击 scripts\setup-env.bat  → 配置向导
@@ -53,7 +53,7 @@
 【日常使用】
 
   启动：插入 U 盘 → 双击 PocketClaw.bat → 选 [1] → 输入密码 → 等几秒
-  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=<启动时显示的Token>
   停止：回到 PocketClaw.bat 菜单 → 选 [2]（或双击 scripts\stop.bat）
   拔盘：等提示"可以安全拔出" → 系统托盘安全弹出 → 拔出
 
@@ -102,7 +102,7 @@
   6. 输入 Master Password
   7. 等待容器启动
   8. 浏览器自动打开聊天界面
-     地址: http://127.0.0.1:18789/chat#token=pocketclaw
+     地址: http://127.0.0.1:18789/chat#token=<启动时显示的Token>
 
 
 【⚠️ 安全提示 — 首次打开被 macOS 拦截】
@@ -158,7 +158,7 @@
 【日常使用】
 
   启动：插入 U 盘 → 双击 PocketClaw.command → 选 [1] → 输入密码
-  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=<启动时显示的Token>
   停止：回到菜单 → 选 [2]（或终端运行 bash scripts/stop.sh）
   拔盘：等提示后 → 在 Finder 侧边栏点击 U 盘旁的弹出按钮 → 拔出
 
@@ -219,13 +219,13 @@
        bash scripts/encrypt-secrets.sh
   4. 启动服务
        bash scripts/start.sh
-  5. 浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+  5. 浏览器打开 http://127.0.0.1:18789/chat#token=<启动时显示的Token>
 
 
 【日常使用】
 
   启动：bash scripts/start.sh → 输入密码 → 等几秒
-  使用：浏览器打开 http://127.0.0.1:18789/chat#token=pocketclaw
+  使用：浏览器打开 http://127.0.0.1:18789/chat#token=<启动时显示的Token>
   停止：bash scripts/stop.sh
   拔盘：umount /media/$USER/你的U盘 → 拔出
 
@@ -308,7 +308,7 @@
 
     1. 确保手机和运行 PocketClaw 的电脑连接同一个 WiFi
     2. 启动 PocketClaw 后，屏幕上会显示"手机访问"地址
-       例如: http://192.168.0.105:18789/#token=pocketclaw
+       例如: http://192.168.0.105:18789/#token=<启动时显示的Token>
     3. 在手机浏览器中打开该地址即可
 
   【添加到主屏幕（像 APP 一样使用）】
@@ -357,8 +357,8 @@
   → 确认 Docker Desktop 已启动且容器状态为 Running
 
   Q4.5: 页面能打开但显示 "unauthorized" 或 "token missing"
-  → 确保 URL 末尾带有 #token=pocketclaw
-     完整地址: http://127.0.0.1:18789/chat#token=pocketclaw
+  → 确保 URL 末尾带有 #token=<启动时显示的Token>
+     完整地址: http://127.0.0.1:18789/chat#token=<启动时显示的Token>
 
   Q5: 忘记 Master Password
   → 无法恢复。只能删除 secrets/.env.encrypted，
@@ -457,7 +457,7 @@ PocketClaw v1.2.5 | 最后更新: 2026-03-04
     1. 按 F12 打开开发者工具 → Console 标签页
     2. 查看红色错误消息
     3. 常见问题：
-       - "token_missing" → URL 缺少 #token=pocketclaw
+       - "token_missing" → URL 缺少 #token=<启动时显示的Token>
        - "invalid connect params" → 按 Ctrl+F5 强制刷新
        - "WebSocket connection failed" → 容器未启动或端口被占用
 

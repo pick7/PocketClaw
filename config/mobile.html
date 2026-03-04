@@ -427,6 +427,50 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 .header-btn:active { background: rgba(255,255,255,0.4); }
+
+/* ── B2: 多会话选择器 ── */
+#session-panel {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center;
+}
+#session-panel.show { display: flex; }
+#session-dialog {
+  background: var(--bg); border-radius: 12px; padding: 16px; width: 280px;
+  max-height: 60vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+#session-dialog h3 { margin: 0 0 12px; font-size: 16px; }
+.session-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 6px;
+  background: rgba(128,128,128,0.1); transition: background 0.15s;
+}
+.session-item:hover, .session-item.active { background: rgba(0,168,132,0.2); }
+.session-item .del-btn {
+  background: none; border: none; color: #f44; font-size: 14px; cursor: pointer;
+  padding: 2px 6px; border-radius: 4px;
+}
+.session-item .del-btn:hover { background: rgba(255,68,68,0.15); }
+#new-session-btn {
+  width: 100%; padding: 10px; border: 1px dashed rgba(128,128,128,0.4);
+  background: none; color: var(--text); border-radius: 8px; cursor: pointer;
+  font-size: 14px; margin-top: 4px;
+}
+#new-session-btn:hover { background: rgba(128,128,128,0.1); }
+
+/* ── D4: 代码块复制按钮 ── */
+.code-block { position: relative; margin: 8px 0; }
+.code-block pre { margin: 0; }
+.code-lang {
+  position: absolute; top: 4px; left: 10px; font-size: 11px;
+  color: rgba(255,255,255,0.45); font-family: monospace; text-transform: uppercase;
+}
+.code-copy {
+  position: absolute; top: 4px; right: 6px; background: rgba(255,255,255,0.15);
+  border: none; color: #fff; font-size: 14px; padding: 2px 6px; border-radius: 4px;
+  cursor: pointer; opacity: 0.5; transition: opacity 0.15s;
+}
+.code-block:hover .code-copy { opacity: 1; }
+.code-copy:active { background: rgba(255,255,255,0.3); }
 </style>
 </head>
 <body>
@@ -438,9 +482,19 @@ html, body {
       <div class="status" id="conn-status">连接中...</div>
     </div>
     <div class="header-actions">
+      <button class="header-btn" id="session-toggle" title="切换会话">📋</button>
       <button class="header-btn" id="search-toggle" title="搜索消息">🔍</button>
       <button class="header-btn" id="export-btn" title="导出聊天记录">💾</button>
       <button id="mode-toggle" title="切换文字/语音">⌨️</button>
+    </div>
+  </div>
+
+  <!-- B2: 多会话面板 -->
+  <div id="session-panel">
+    <div id="session-dialog">
+      <h3>💬 会话管理</h3>
+      <div id="session-list"></div>
+      <button id="new-session-btn">+ 新建会话</button>
     </div>
   </div>
 
@@ -555,7 +609,9 @@ function saveChatHistory() {
   try {
     // 限制最大消息数，避免 localStorage 溢出
     while (chatHistory.length > CHAT_MAX_MESSAGES) chatHistory.shift();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chatHistory));
+    // A4: 根据当前会话使用不同 key
+    const key = STATE.sessionKey ? STORAGE_KEY + '_' + STATE.sessionKey : STORAGE_KEY;
+    localStorage.setItem(key, JSON.stringify(chatHistory));
   } catch(e) {}
 }
 function loadChatHistory() {
@@ -847,6 +903,45 @@ function extractText(msg) {
 }
 
 // ── Markdown 渲染（Q3: 增强版 + XSS 安全加固） ──
+
+// D4: 复制代码块内容
+function copyCode(btn) {
+  const code = btn.closest('.code-block').querySelector('code');
+  if (!code) return;
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    btn.textContent = '\u2705';
+    setTimeout(() => { btn.textContent = '\u{1f4cb}'; }, 1500);
+  }).catch(() => {
+    // fallback for non-HTTPS
+    const ta = document.createElement('textarea');
+    ta.value = code.textContent;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.textContent = '\u2705';
+    setTimeout(() => { btn.textContent = '\u{1f4cb}'; }, 1500);
+  });
+}
+
+// D1: 通知 API（标签页失焦时新消息通知）
+function notifyNewMessage(text) {
+  if (document.visibilityState !== 'hidden') return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    const n = new Notification('PocketClaw', {
+      body: (text || '').slice(0, 100),
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🤖</text></svg>',
+      tag: 'pocketclaw-msg'
+    });
+    setTimeout(() => n.close(), 5000);
+  } else if (Notification.permission !== 'denied') {
+    Notification.requestPermission();
+  }
+}
+
 function renderMd(text) {
   if (!text) return '';
 
@@ -854,8 +949,9 @@ function renderMd(text) {
   var codeBlocks = [];
   text = text.replace(/```(\w*)\n([\s\S]*?)```/g, function(m, lang, code) {
     var escaped = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    var langAttr = lang ? ' data-lang="' + lang + '"' : '';
-    codeBlocks.push('<pre' + langAttr + '><code>' + escaped + '</code></pre>');
+    var langLabel = lang ? '<span class="code-lang">' + lang + '</span>' : '';
+    // D4: 添加复制按钮
+    codeBlocks.push('<div class="code-block">' + langLabel + '<button class="code-copy" onclick="copyCode(this)">\u{1f4cb}</button><pre><code>' + escaped + '</code></pre></div>');
     return '\x00CB' + (codeBlocks.length - 1) + '\x00';
   });
 
@@ -889,7 +985,10 @@ function renderMd(text) {
         return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
       }
       return text;
-    })
+    });
+
+  // D5: 自动识别裸 URL 并变为可点击链接（排除已被 <a> 包裹的）
+  h = h.replace(/(?<![="'>])(https?:\/\/[^\s<,;)}\]]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
     // 引用
     .replace(/^&gt;\s?(.+)$/gm, '<blockquote>$1</blockquote>')
     // 无序列表
@@ -1017,6 +1116,7 @@ function finalizeAIMessage(text) {
   }
   scrollToBottom();
   saveChatHistory();
+  notifyNewMessage(text);  // D1: 通知
 
   // 如果上次输入是语音，自动朗读
   if (STATE.lastInputWasVoice && STATE.ttsEnabled) {
@@ -1284,7 +1384,13 @@ function init() {
   // ── 初始化新功能 ──
   initSearch();
   initExport();
+  initSessionPanel();
   initResourceMonitor();
+
+  // D1: 请求通知权限
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 
   // ── 页面可见性变化处理（iOS 切换 App 后重连） ──
   document.addEventListener('visibilitychange', () => {
@@ -1304,6 +1410,62 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ── B2: 多会话面板 ──
+function initSessionPanel() {
+  const toggle = $('session-toggle');
+  const panel = $('session-panel');
+  const list = $('session-list');
+  const newBtn = $('new-session-btn');
+
+  function renderSessions() {
+    const sessions = getSessions();
+    const currentKey = STATE.sessionKey || '';
+    list.innerHTML = '';
+    // 默认会话
+    const defItem = document.createElement('div');
+    defItem.className = 'session-item' + (currentKey === '' ? ' active' : '');
+    defItem.innerHTML = '<span>\u9ed8\u8ba4\u4f1a\u8bdd</span>';
+    defItem.addEventListener('click', () => { switchSession(''); panel.classList.remove('show'); renderSessions(); });
+    list.appendChild(defItem);
+    // 自定义会话
+    sessions.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'session-item' + (currentKey === s.key ? ' active' : '');
+      const label = document.createElement('span');
+      label.textContent = s.name || s.key;
+      item.appendChild(label);
+      const del = document.createElement('button');
+      del.className = 'del-btn';
+      del.textContent = '\u2716';
+      del.addEventListener('click', e => {
+        e.stopPropagation();
+        if (confirm('\u5220\u9664\u4f1a\u8bdd "' + (s.name || s.key) + '"?')) {
+          localStorage.removeItem(STORAGE_KEY + '_' + s.key);
+          saveSessions(sessions.filter(x => x.key !== s.key));
+          if (currentKey === s.key) switchSession('');
+          renderSessions();
+        }
+      });
+      item.appendChild(del);
+      item.addEventListener('click', () => { switchSession(s.key); panel.classList.remove('show'); renderSessions(); });
+      list.appendChild(item);
+    });
+  }
+
+  toggle.addEventListener('click', () => { panel.classList.toggle('show'); renderSessions(); });
+  panel.addEventListener('click', e => { if (e.target === panel) panel.classList.remove('show'); });
+  newBtn.addEventListener('click', () => {
+    const name = prompt('\u8f93\u5165\u4f1a\u8bdd\u540d\u79f0:');
+    if (!name) return;
+    const key = Date.now().toString(36);
+    const sessions = getSessions();
+    sessions.push({ key, name });
+    saveSessions(sessions);
+    switchSession(key);
+    panel.classList.remove('show');
+  });
+}
 
 // ── U5: 搜索功能 ──
 function initSearch() {
@@ -1330,14 +1492,25 @@ function initSearch() {
     const q = searchInput.value.trim().toLowerCase();
     clearHighlights();
     if (!q) return;
+    // A8: 使用 TreeWalker 遍历文本节点，避免 innerHTML 注入破坏 DOM
     const bubbles = DOM.messages.querySelectorAll('.bubble');
     bubbles.forEach(b => {
-      const text = b.textContent || '';
-      if (text.toLowerCase().includes(q)) {
-        b.innerHTML = b.innerHTML.replace(
-          new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi'),
-          '<span class="highlight">$1</span>'
-        );
+      const walker = document.createTreeWalker(b, NodeFilter.SHOW_TEXT, null);
+      const matches = [];
+      let node;
+      while ((node = walker.nextNode())) {
+        const idx = node.textContent.toLowerCase().indexOf(q);
+        if (idx !== -1) matches.push({ node, idx });
+      }
+      matches.reverse().forEach(({ node, idx }) => {
+        const span = document.createElement('span');
+        span.className = 'highlight';
+        const range = document.createRange();
+        range.setStart(node, idx);
+        range.setEnd(node, idx + q.length);
+        range.surroundContents(span);
+      });
+      if (matches.length > 0) {
         b.closest('.msg').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     });

@@ -62,6 +62,13 @@ show_status() {
             echo -e "  ${CYAN}[地址] http://127.0.0.1:18789/${RESET}"
             echo -e "  ${YELLOW}[提示] Token 未知，请通过菜单 [1] 重新启动获取${RESET}"
         fi
+        # B3: 显示当前提供商和模型
+        if [ -f "$PROJECT_DIR/config/workspace/.provider" ]; then
+            local prov_name model_id
+            prov_name=$(grep '^PROVIDER_NAME=' "$PROJECT_DIR/config/workspace/.provider" 2>/dev/null | cut -d= -f2 | xargs)
+            model_id=$(grep '^MODEL_ID=' "$PROJECT_DIR/config/workspace/.provider" 2>/dev/null | cut -d= -f2 | xargs)
+            [ -n "$prov_name" ] && echo -e "  ${CYAN}[模型] ${prov_name} / ${model_id:-默认}${RESET}"
+        fi
     else
         echo -e "  [状态] PocketClaw 未运行"
     fi

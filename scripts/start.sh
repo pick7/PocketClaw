@@ -365,17 +365,7 @@ json.dump(cfg, open('$DAEMON_JSON','w'), indent=2)
             done
             sleep 2
             open -a "Docker"
-            echo "       等待 Docker 引擎就绪（最多等待 120 秒）..."
-            WAIT_COUNT2=0
-            while ! docker info &>/dev/null; do
-                sleep 5
-                WAIT_COUNT2=$((WAIT_COUNT2 + 5))
-                if [ "$WAIT_COUNT2" -ge 120 ]; then
-                    echo "[错误] Docker Desktop 重启超时！请手动重启后重试。"
-                    exit 1
-                fi
-                echo "       已等待 ${WAIT_COUNT2} 秒..."
-            done
+            wait_for_docker 120 "Desktop 重启"
             echo "[OK] Docker 已重启，镜像加速器已生效"
         else
             echo "[信息] 镜像加速器配置已写入，将在下次 Docker 启动时生效"
@@ -676,7 +666,7 @@ else
     # 创建网络（忽略已存在错误）
     docker network create pocketclaw_pocketclaw-net >> "$BUILD_LOG" 2>&1 || true
 
-    # 直接 docker run
+    # 直接 docker run（与 docker-compose.yml 保持相同安全策略）
     docker run -d \
         --name pocketclaw \
         --restart unless-stopped \
@@ -687,6 +677,15 @@ else
         -v "$PROJECT_DIR/data/sessions:/home/node/.openclaw/sessions" \
         -v "$PROJECT_DIR/data/logs:/home/node/.openclaw/logs" \
         -v "$PROJECT_DIR/data/skills:/home/node/.openclaw/skills" \
+        --read-only \
+        --security-opt no-new-privileges:true \
+        --cap-drop ALL \
+        --memory 2g \
+        --pids-limit 128 \
+        --tmpfs /tmp:size=100M,noexec,nosuid \
+        --tmpfs /home/node/.npm:size=50M \
+        --tmpfs /var/log:size=50M \
+        --tmpfs /home/node/.openclaw:size=100M \
         --env-file "$PROJECT_DIR/.env" \
         -e "GATEWAY_AUTH_PASSWORD=$GATEWAY_AUTH_PASSWORD" \
         "$IMAGE_NAME" >> "$BUILD_LOG" 2>&1

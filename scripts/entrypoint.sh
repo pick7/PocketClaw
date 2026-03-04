@@ -145,11 +145,20 @@ build_channels() {
   local channels=""
   ACTIVE_CHANNELS=""
 
+  # C6: JSON 值转义辅助函数（转义 \ 和 "）
+  _json_escape() {
+    local val="$1"
+    val="${val//\\/\\\\}"
+    val="${val//\"/\\\"}"
+    printf '%s' "$val"
+  }
+
   # 辅助函数: 添加简单频道（单 token 类型）
   _add_simple_channel() {
     local name="$1" env_var="$2" json_key="$3" label="$4"
     local val="${!env_var:-}"
     if [[ -n "$val" ]]; then
+      val=$(_json_escape "$val")
       channels="${channels}\"${name}\":{\"${json_key}\":\"${val}\"},"
       ACTIVE_CHANNELS="${ACTIVE_CHANNELS}  ✅ ${label}\n"
     fi
@@ -160,6 +169,8 @@ build_channels() {
     local name="$1" env1="$2" key1="$3" env2="$4" key2="$5" label="$6"
     local val1="${!env1:-}" val2="${!env2:-}"
     if [[ -n "$val1" && -n "$val2" ]]; then
+      val1=$(_json_escape "$val1")
+      val2=$(_json_escape "$val2")
       channels="${channels}\"${name}\":{\"${key1}\":\"${val1}\",\"${key2}\":\"${val2}\"},"
       ACTIVE_CHANNELS="${ACTIVE_CHANNELS}  ✅ ${label}\n"
     elif [[ -n "$val1" ]]; then
@@ -359,7 +370,7 @@ main() {
 
   # S1: 启动后掩码 .provider 文件中的 API Key（防止明文泄露）
   if [[ -f "$WORKSPACE_PROVIDER" ]]; then
-    sed -i.bak 's/^API_KEY=.\{4\}\(.*\)/API_KEY=****\1/' "$WORKSPACE_PROVIDER" 2>/dev/null || true
+    sed -i.bak 's/^API_KEY=\(.\{4\}\).*/API_KEY=\1****/' "$WORKSPACE_PROVIDER" 2>/dev/null || true
     rm -f "${WORKSPACE_PROVIDER}.bak" 2>/dev/null
   fi
 

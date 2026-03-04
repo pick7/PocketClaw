@@ -95,13 +95,15 @@ COPY --chown=node:node scripts/entrypoint.sh /app/entrypoint.sh
 COPY --chown=node:node scripts/gateway-patch.py /app/scripts/gateway-patch.py
 RUN chmod +x /app/entrypoint.sh
 
+# ── 构建时注入 UI / 路由（read_only 容器运行时无法写入镜像层） ──
+RUN cp /app/config/mobile.html /usr/local/lib/node_modules/openclaw/dist/control-ui/mobile.html 2>/dev/null || true
+RUN CONTROL_UI_DIR=/usr/local/lib/node_modules/openclaw/dist/control-ui \
+    GW_DIR=/usr/local/lib/node_modules/openclaw/dist \
+    python3 /app/scripts/gateway-patch.py 2>/dev/null || true
+
 USER node
 
 EXPOSE 18789
-
-# 健康检查（每30秒检测一次，连续3次失败则标记为 unhealthy）
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD curl -sf http://localhost:18789/ || exit 1
 
 # 优雅停机信号
 STOPSIGNAL SIGTERM

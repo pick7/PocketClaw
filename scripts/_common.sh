@@ -39,7 +39,7 @@ secure_wipe() {
     local file="$1"
     if [ -f "$file" ]; then
         local size
-        size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+        size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || wc -c < "$file" 2>/dev/null || echo 0)
         if [ "$size" -gt 0 ] 2>/dev/null; then
             dd if=/dev/urandom of="$file" bs=1 count="$size" conv=notrunc 2>/dev/null
         fi

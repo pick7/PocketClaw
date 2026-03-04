@@ -209,7 +209,12 @@ if [[ "$RESTART" =~ ^[Yy]$ ]]; then
     echo ""
     echo "  当前提供商: $PROV_NAME"
     echo "  当前模型:   $DEFAULT_MODEL"
-    echo "  控制面板:   http://127.0.0.1:18789/#token=pocketclaw"
+    # 读取实际 Gateway Token
+    local _token=""
+    if [ -f "$PROJECT_DIR/config/workspace/.gateway_token" ]; then
+        _token=$(cat "$PROJECT_DIR/config/workspace/.gateway_token" 2>/dev/null | tr -d '\n\r')
+    fi
+    echo "  控制面板:   http://127.0.0.1:18789/#token=${_token:-pocketclaw}"
 else
     echo ""
     echo "[提示] 稍后手动重启: docker compose restart"

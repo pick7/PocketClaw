@@ -55,7 +55,7 @@ if "!MASTER_PASS!"=="" (
 )
 
 REM --------------- 密码长度校验 ---------------
-powershell -NoProfile -Command "if('!MASTER_PASS!'.Length -lt 6){Write-Host '[错误] 密码太短, 至少需要 6 个字符.'; exit 1}" || (
+powershell -NoProfile -Command "$p='!MASTER_PASS!'; if($p.Length -lt 8){Write-Host '[错误] 密码太短, 至少需要 8 个字符.'; exit 1}; if(-not($p -match '[a-zA-Z]' -and $p -match '[0-9]')){Write-Host '[错误] 密码需同时包含字母和数字.'; exit 1}" || (
     popd
     pause
     exit /b 1

@@ -64,14 +64,13 @@ services:
       - no-new-privileges:true           # 禁止容器内提权
     cap_drop:
       - ALL                              # 丢弃所有 Linux capabilities
-    cap_add:
-      - NET_BIND_SERVICE                 # 仅保留端口绑定能力
     mem_limit: 2g                        # 内存上限 2GB，防止内存耗尽攻击
     pids_limit: 128                      # 进程数上限，防止 fork 炸弹
     tmpfs:
       - /tmp:size=100M,noexec,nosuid     # 临时目录: 禁止执行、禁止 setuid
       - /home/node/.npm:size=50M         # npm 运行时缓存
       - /var/log:size=50M                # 日志目录
+      - /home/node/.openclaw:size=100M   # entrypoint 动态生成 openclaw.json
 
 networks:
   pocketclaw-net:
