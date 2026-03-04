@@ -573,24 +573,24 @@ if "!BUILD_RESULT!"=="FAIL" (
 REM 保存构建指纹
 if "!CURRENT_HASH!" neq "" echo !CURRENT_HASH!> "!BUILD_HASH_FILE!"
 
+goto :container_ok
 :skip_build
 
-REM 确保容器已运行（跳过构建时容器可能未启动）
+
+REM 跳过构建时，确保容器已启动
+echo [信息] 启动已有容器...
 docker compose up -d >nul 2>&1
-REM 等待容器就绪
 set "CONTAINER_WAIT=0"
-<nul set /p "=[信息] 等待容器就绪 "
 :container_wait
 docker exec pocketclaw echo OK >nul 2>&1
 if !ERRORLEVEL! equ 0 goto :container_ok
 set /a "CONTAINER_WAIT+=2"
-if !CONTAINER_WAIT! geq 120 (
+if !CONTAINER_WAIT! geq 60 (
     echo [错误] 容器启动超时，请检查 Docker Desktop 是否运行
     pause
     exit /b 1
 )
 timeout /t 2 /nobreak >nul
-<nul set /p "=."
 goto :container_wait
 :container_ok
 
