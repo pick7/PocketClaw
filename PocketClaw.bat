@@ -35,12 +35,7 @@ if !ERRORLEVEL! neq 0 (
         echo   [状态] PocketClaw 未启动
     ) else (
         echo   [状态] PocketClaw 运行中
-        set "MENU_TOKEN="
-        if exist "!PROJECT_DIR!\config\workspace\.gateway_token" (
-            set /p MENU_TOKEN=<"!PROJECT_DIR!\config\workspace\.gateway_token"
-        )
-        if "!MENU_TOKEN!"=="" set "MENU_TOKEN=pocketclaw"
-        echo   [地址] http://127.0.0.1:18789/#token=!MENU_TOKEN!
+        call :show_running_info
     )
 )
 if exist "!ENC_FILE!" (
@@ -129,3 +124,60 @@ echo.
 echo   再见！
 endlocal
 
+goto :eof
+
+REM ============================================================
+REM  子程序: 显示运行状态 (提供商/模型/健康检查/可切换API)
+REM ============================================================
+:show_running_info
+set "MENU_TOKEN="
+if exist "%PROJECT_DIR%\config\workspace\.gateway_token" set /p MENU_TOKEN=<"%PROJECT_DIR%\config\workspace\.gateway_token"
+if "!MENU_TOKEN!"=="" set "MENU_TOKEN=pocketclaw"
+echo   [地址] http://127.0.0.1:18789/#token=!MENU_TOKEN!
+
+REM 读取当前提供商和模型
+set "MENU_PROV="
+set "MENU_MODEL="
+if not exist "%PROJECT_DIR%\config\workspace\.provider" goto :skip_provider
+for /f "tokens=2 delims==" %%v in ('findstr /i "^PROVIDER_NAME=" "%PROJECT_DIR%\config\workspace\.provider"') do set "MENU_PROV=%%v"
+for /f "tokens=2 delims==" %%v in ('findstr /i "^MODEL_ID=" "%PROJECT_DIR%\config\workspace\.provider"') do set "MENU_MODEL=%%v"
+:skip_provider
+
+REM API 健康检查
+set "HEALTH_OK=0"
+curl.exe -sf --connect-timeout 2 --max-time 3 -o nul http://127.0.0.1:18789/health 2>nul
+if !ERRORLEVEL! equ 0 set "HEALTH_OK=1"
+
+REM 显示第一行: [模型] provider / model + 健康状态
+if defined MENU_PROV (
+    if "!HEALTH_OK!"=="1" (
+        echo   [模型] !MENU_PROV! / !MENU_MODEL!  [可用]
+    ) else (
+        echo   [模型] !MENU_PROV! / !MENU_MODEL!  [异常]
+    )
+) else (
+    if "!HEALTH_OK!"=="1" (
+        echo   [API]  已连接
+    ) else (
+        echo   [API]  连接异常
+    )
+)
+
+REM 显示第二行: 可切换的已绑定 API
+set "BOUND_LIST="
+if not exist "%PROJECT_DIR%\config\workspace\.bound_providers" goto :skip_bound
+for /f "usebackq delims=" %%p in ("%PROJECT_DIR%\config\workspace\.bound_providers") do (
+    if not "%%p"=="!MENU_PROV!" (
+        if defined BOUND_LIST (
+            set "BOUND_LIST=!BOUND_LIST!, %%p"
+        ) else (
+            set "BOUND_LIST=%%p"
+        )
+    )
+)
+:skip_bound
+if defined BOUND_LIST (
+    echo          可切换: !BOUND_LIST!
+)
+
+goto :eof

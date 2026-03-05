@@ -252,19 +252,24 @@ echo ""
 # ── 交互式解密 .env.encrypted → .env ──
 decrypt_env() {
     local prompt="${1:-请输入 Master Password: }"
-    read -s -p "$prompt" MASTER_PASS
-    echo ""
-    if [ -z "$MASTER_PASS" ]; then
-        echo "[错误] 密码不能为空。"
-        exit 1
-    fi
-    if ! decrypt_env_file "$ENC_FILE" "$PROJECT_DIR/.env" "$MASTER_PASS"; then
-        echo "[错误] 解密失败，密码可能不正确。"
+    while true; do
+        read -s -p "$prompt" MASTER_PASS
+        echo ""
+        if [ -z "$MASTER_PASS" ]; then
+            echo "[错误] 密码不能为空，请重新输入。"
+            echo ""
+            continue
+        fi
+        if decrypt_env_file "$ENC_FILE" "$PROJECT_DIR/.env" "$MASTER_PASS"; then
+            unset MASTER_PASS
+            echo "[OK] 解密成功"
+            return 0
+        fi
+        echo "[错误] 解密失败，密码可能不正确，请重新输入。"
         rm -f "$PROJECT_DIR/.env"
-        exit 1
-    fi
-    unset MASTER_PASS
-    echo "[OK] 解密成功"
+        unset MASTER_PASS
+        echo ""
+    done
 }
 
 # ── 检查 .env ──
@@ -807,7 +812,7 @@ fi
 # 等待服务就绪后打开浏览器
 echo "[信息] 等待服务就绪..."
 SVC_WAIT=0
-while ! curl -sf -o /dev/null http://127.0.0.1:18789/ 2>/dev/null; do
+while ! curl -sf --connect-timeout 3 --max-time 5 -o /dev/null http://127.0.0.1:18789/health 2>/dev/null; do
     SVC_WAIT=$((SVC_WAIT + 2))
     [ "$SVC_WAIT" -ge 30 ] && break
     sleep 2

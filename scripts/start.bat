@@ -240,12 +240,13 @@ goto :first_setup
 :decrypt_env
 echo [信息] 检测到加密配置，正在解密...
 echo.
+:decrypt_retry
 REM 使用 PowerShell 读取密码（输入时显示 * 号遮蔽）
 for /f "delims=" %%p in ('powershell -NoProfile -Command "$p = Read-Host -Prompt '  Master Password' -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($p))"') do set "MASTER_PASS=%%p"
 if "!MASTER_PASS!"=="" (
-    echo [错误] 密码不能为空。
-    pause
-    exit /b 1
+    echo [错误] 密码不能为空，请重新输入。
+    echo.
+    goto :decrypt_retry
 )
 REM 通过 stdin 传递密码，避免 -pass pass: 在进程列表中泄露
 <nul set /p ="!MASTER_PASS!"| openssl enc -aes-256-cbc -d -salt -pbkdf2 -iter 100000 ^
@@ -253,10 +254,10 @@ REM 通过 stdin 传递密码，避免 -pass pass: 在进程列表中泄露
     -out "%PROJECT_DIR%\.env" ^
     -pass stdin 2>nul
 if !ERRORLEVEL! neq 0 (
-    echo [错误] 解密失败，密码可能不正确。
+    echo [错误] 解密失败，密码可能不正确，请重新输入。
     if exist "%PROJECT_DIR%\.env" del /q "%PROJECT_DIR%\.env"
-    pause
-    exit /b 1
+    echo.
+    goto :decrypt_retry
 )
 echo [OK] 解密成功
 goto :env_ready
@@ -636,7 +637,7 @@ echo.
 echo [信息] 等待服务就绪...
 set "SVC_WAIT=0"
 :svc_check
-curl.exe -sf -o nul http://127.0.0.1:18789/ 2>nul
+curl.exe -sf --connect-timeout 3 --max-time 5 -o nul http://127.0.0.1:18789/health 2>nul
 if !ERRORLEVEL! equ 0 goto :svc_ready
 set /a "SVC_WAIT+=2"
 if !SVC_WAIT! geq 30 goto :svc_ready

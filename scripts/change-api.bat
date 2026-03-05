@@ -11,6 +11,7 @@ set "PROJECT_DIR=%CD%"
 set "ENV_FILE=%PROJECT_DIR%\.env"
 set "ENC_FILE=%PROJECT_DIR%\secrets\.env.encrypted"
 set "PROVIDER_FILE=%PROJECT_DIR%\config\workspace\.provider"
+set "BOUND_FILE=%PROJECT_DIR%\config\workspace\.bound_providers"
 set "NEED_REENCRYPT=0"
 set "MASTER_PASS="
 
@@ -194,6 +195,12 @@ echo MODEL_ID=!DEFAULT_MODEL!
 ) > "!PROVIDER_FILE!"
 
 echo   [OK] 提供商配置已保存
+
+REM 记录已绑定的提供商
+findstr /x "!PROV!" "!BOUND_FILE!" >nul 2>&1
+if errorlevel 1 (
+    echo !PROV!>> "!BOUND_FILE!"
+)
 
 REM 同时更新 .env
 call :do_update_env

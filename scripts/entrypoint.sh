@@ -52,8 +52,8 @@ load_config() {
     while IFS='=' read -r key value; do
       [[ "$key" =~ ^[[:space:]]*# ]] && continue
       [[ -z "$key" ]] && continue
-      key=$(echo "$key" | xargs)
-      value=$(echo "$value" | xargs)
+      key=$(echo "$key" | xargs | tr -d '\r')
+      value=$(echo "$value" | xargs | tr -d '\r')
       case "$key" in
         PROVIDER_NAME) PROVIDER="$value" ;;
         API_KEY) ACTIVE_KEY="$value" ;;
@@ -286,6 +286,11 @@ JSONEOF
 
   # 将 token 写入 workspace 供 AI 读取
   echo "$AUTH_PASS" > "$CONFIG_DIR/workspace/.gateway_token"
+
+  # 写入 API 状态 JSON 供 mobile.html 读取
+  cat > "/home/node/.openclaw/api-status.json" << STATUSEOF
+{"provider":"$PROVIDER","model":"$MODEL_ID","label":"$PROVIDER_LABEL"}
+STATUSEOF
 }
 
 # ────────────────────────────────────────────────

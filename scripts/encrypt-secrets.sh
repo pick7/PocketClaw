@@ -39,39 +39,29 @@ fi
 echo ""
 yellow "=== PocketClaw .env 加密工具 ==="
 echo ""
-read -rsp "请输入加密密码 (Master Password): " MASTER_PASS
-echo ""
-read -rsp "请再次确认密码: " MASTER_PASS_CONFIRM
-echo ""
-if [ "$MASTER_PASS" != "$MASTER_PASS_CONFIRM" ]; then
-    red "[错误] 两次密码不一致, 请重试."
-    exit 1
-fi
 
-if [ -z "$MASTER_PASS" ]; then
-    red "[错误] 密码不能为空."
-    exit 1
-fi
+while true; do
+    read -rsp "请输入加密密码 (Master Password): " MASTER_PASS
+    echo ""
 
-# 密码长度校验（至少8个字符）+ S6: 强度校验
-if [ ${#MASTER_PASS} -lt 8 ]; then
-    red "[错误] 密码太短, 至少需要 8 个字符."
-    exit 1
-fi
+    if [ -z "$MASTER_PASS" ]; then
+        red "[错误] 密码不能为空, 请重新输入."
+        echo ""
+        continue
+    fi
 
-# S6: 必须包含字母和数字
-if ! echo "$MASTER_PASS" | grep -q '[a-zA-Z]' || ! echo "$MASTER_PASS" | grep -q '[0-9]'; then
-    red "[错误] 密码必须同时包含字母和数字."
-    echo "       建议使用: 大小写字母 + 数字 + 特殊字符"
-    exit 1
-fi
+    read -rsp "请再次确认密码: " MASTER_PASS_CONFIRM
+    echo ""
 
-# 密码强度提示
-if [ ${#MASTER_PASS} -ge 12 ]; then
-    green "  密码强度: 强 ✓"
-elif [ ${#MASTER_PASS} -ge 8 ]; then
-    yellow "  密码强度: 中等（推荐 12 位以上）"
-fi
+    if [ "$MASTER_PASS" != "$MASTER_PASS_CONFIRM" ]; then
+        red "[错误] 两次密码不一致, 请重新输入."
+        echo ""
+        unset MASTER_PASS MASTER_PASS_CONFIRM 2>/dev/null
+        continue
+    fi
+
+    break
+done
 
 # --------------- 确保 secrets 目录存在 ---------------
 mkdir -p "$SECRETS_DIR"

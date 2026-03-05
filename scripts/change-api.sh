@@ -12,6 +12,7 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$PROJECT_DIR/.env"
 ENC_FILE="$PROJECT_DIR/secrets/.env.encrypted"
 PROVIDER_FILE="$PROJECT_DIR/config/workspace/.provider"
+BOUND_FILE="$PROJECT_DIR/config/workspace/.bound_providers"
 NEED_REENCRYPT=0
 MASTER_PASS=""
 
@@ -192,6 +193,9 @@ API_KEY=$NEW_KEY
 MODEL_ID=$DEFAULT_MODEL
 EOF
 echo "  [OK] 提供商配置已保存"
+
+# 记录已绑定的提供商
+grep -qxF "$PROV" "$BOUND_FILE" 2>/dev/null || echo "$PROV" >> "$BOUND_FILE"
 
 # 更新 .env
 do_decrypt

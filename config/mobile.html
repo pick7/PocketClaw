@@ -73,6 +73,11 @@ html, body {
 }
 #header .status.connected { color: #25D366; opacity: 1; }
 #header .status.error { color: #ff6b6b; opacity: 1; }
+#header .api-info {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 1px;
+}
 
 /* 模式切换按钮 */
 #mode-toggle {
@@ -496,6 +501,7 @@ html, body {
     <div>
       <div class="title" id="title-tap">🤖 PocketClaw</div>
       <div class="status" id="conn-status">连接中...</div>
+      <div class="api-info" id="api-info"></div>
     </div>
     <div class="header-actions">
       <button class="header-btn" id="session-toggle" title="切换会话">📋</button>
@@ -670,6 +676,17 @@ function showToast(msg, ms) {
 function setStatus(text, cls) {
   DOM.status.textContent = text;
   DOM.status.className = 'status' + (cls ? ' ' + cls : '');
+}
+
+function fetchApiInfo() {
+  fetch(location.origin + '/api-info', { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var el = document.getElementById('api-info');
+      if (el && d.label && d.model) {
+        el.textContent = d.label + ' / ' + d.model;
+      }
+    }).catch(function() {});
 }
 
 function timeStr() {
@@ -855,6 +872,7 @@ function sendConnect() {
     STATE.connected = true;
     STATE.retryCount = 0;
     setStatus('已连接', 'connected');
+    fetchApiInfo();
     dbg('Connected OK!', 'ok');
     // 连接成功后隐藏调试面板
     const dp = $('debug-panel');
