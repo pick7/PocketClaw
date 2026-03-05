@@ -376,12 +376,6 @@ main() {
   inject_mobile
   patch_gateway
 
-  # S1: 启动后掩码 .provider 文件中的 API Key（防止明文泄露）
-  if [[ -f "$WORKSPACE_PROVIDER" ]]; then
-    sed -i.bak 's/^API_KEY=\(.\{4\}\).*/API_KEY=\1****/' "$WORKSPACE_PROVIDER" 2>/dev/null || true
-    rm -f "${WORKSPACE_PROVIDER}.bak" 2>/dev/null
-  fi
-
   # 启动 OpenClaw Gateway
   exec openclaw gateway --port "$GATEWAY_PORT" --verbose
 }
