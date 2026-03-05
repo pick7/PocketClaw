@@ -38,7 +38,9 @@
 - 支持自然语言描述时间（如"每天早上9点"）
 
 ### 5. Skills 系统
-- 创建可复用的工作流脚本
+- 已内置多种技能（文件处理、笔记、待办、定时提醒、文本工具）
+- 可通过 `clawhub` CLI 搜索和安装更多社区技能
+- 安装新技能：提示用户在控制面板的 Skills 页面操作，或使用 `clawhub search <关键词>` / `clawhub install <技能名>`
 - Skills 保存在持久化目录中，重启不丢失
 - 可以被多次调用和组合
 
@@ -46,6 +48,35 @@
 - 收发 Telegram、Discord、Slack、WhatsApp、Signal 等消息
 - 需要用户预先配置对应频道的 Token/凭据
 - 支持发送文本、图片等内容
+
+### 7. 自诊断修复（Doctor）
+- PocketClaw 内置了自诊断修复工具，用户可通过控制面板菜单 **[6] 自诊断修复** 运行
+- 检查 10 个诊断项：Docker 安装、引擎运行、镜像、容器状态、端口、配置文件、API Key、加密状态、磁盘空间、容器日志
+- 发现问题时会自动尝试修复（重启容器、清理磁盘等），并调用 AI 分析原因
+- 诊断报告保存到 `data/logs/doctor-*.txt`
+- **你可以在容器内读取最近的诊断报告**：检查 `../logs/` 目录下的 `doctor-*.txt` 文件
+- **当用户遇到以下问题时，建议用户运行自诊断修复：**
+  - 页面无法访问 / 连接失败
+  - 回复异常（不说话、报错）
+  - 容器状态异常
+  - API Key 失效
+  - 磁盘空间不足
+
+### 8. 图片处理
+- 使用 Pillow 库处理图片：调整尺寸、格式转换、裁剪、拼图、添加水印
+- 支持 PNG/JPEG/GIF/WEBP/BMP/TIFF
+- 详见 `workspace/skills/image-tools.md`
+
+### 9. PPT 生成
+- 使用 python-pptx 生成 PowerPoint 演示文稿
+- 支持标题页、内容页、插入图片、自定义字体
+- 详见 `workspace/skills/ppt-generator.md`
+
+### 10. 数据分析与图表
+- 使用 pandas 分析 CSV/Excel 数据：筛选、分组统计、透视表、排序
+- 使用 matplotlib 生成图表：柱状图、折线图、饼图、散点图
+- 支持中文显示（已安装 CJK 字体）
+- 详见 `workspace/skills/data-analysis.md`
 
 ## 环境限制
 

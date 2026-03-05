@@ -25,6 +25,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     ca-certificates \
     chromium \
     fonts-noto-cjk \
+    antiword \
     python3 \
     python3-pip \
     python3-venv \
@@ -36,7 +37,12 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     python-docx \
     pdfplumber \
     openpyxl \
-    qrcode
+    xlrd \
+    qrcode \
+    Pillow \
+    python-pptx \
+    pandas \
+    matplotlib
 
 # Chromium 无头浏览器配置（让 Playwright/Puppeteer 使用系统安装的 Chromium）
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
@@ -61,7 +67,9 @@ ARG CACHE_DATE=0
 RUN --mount=type=cache,target=/root/.npm \
     npm config set registry https://registry.npmmirror.com && \
     (npm install -g openclaw@latest --registry https://registry.npmjs.org 2>/dev/null || \
-     npm install -g openclaw@latest)
+     npm install -g openclaw@latest) && \
+    (npm install -g clawhub@latest --registry https://registry.npmjs.org 2>/dev/null || \
+     npm install -g clawhub@latest 2>/dev/null || true)
 
 # 复制 VERSION（放在 npm install 之后，避免版本号变更时重新下载 openclaw）
 COPY VERSION /tmp/POCKETCLAW_VERSION

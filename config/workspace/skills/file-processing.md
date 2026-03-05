@@ -1,7 +1,19 @@
 # Skill: 文件处理
 
 ## 描述
-读取和处理用户上传的 Word、PDF、Excel 文件。容器内已安装 `python-docx`、`pdfplumber`、`openpyxl`。
+读取和处理用户上传的 Word、PDF、Excel 文件。容器内已安装 `python-docx`、`pdfplumber`、`openpyxl`、`xlrd`、`antiword`。
+
+### 支持格式
+| 格式 | 读取 | 创建 | 库/工具 |
+|------|------|------|----------|
+| .docx | ✅ | ✅ | python-docx |
+| .doc | ✅ | ❌ | antiword |
+| .xlsx | ✅ | ✅ | openpyxl |
+| .xls | ✅ | ❌ | xlrd |
+| .pdf | ✅ | ❌ | pdfplumber |
+| .pptx | ❌ | ✅ | python-pptx（见 skills/ppt-generator.md）|
+| .csv | ✅ | ✅ | pandas（见 skills/data-analysis.md）|
+| 图片 | ✅ | ✅ | Pillow（见 skills/image-tools.md）|
 
 ## 前提
 - 用户通过聊天界面上传文件（OpenClaw 会将文件保存到 workspace 目录）
@@ -23,8 +35,8 @@ with pdfplumber.open("workspace/上传的文件.pdf") as pdf:
     # tables = page.extract_tables()
 ```
 
-### 读取 Word
-当用户说"帮我看看这个 Word"、"读一下这个 docx"：
+### 读取 Word (.docx)
+当用户说“帮我看看这个 Word”、“读一下这个 docx”：
 
 ```python
 from docx import Document
@@ -35,8 +47,22 @@ text = "\n".join([p.text for p in doc.paragraphs])
 # for table in doc.tables: ...
 ```
 
-### 读取 Excel
-当用户说"帮我看看这个 Excel"、"分析这个表格"：
+### 读取旧版 Word (.doc)
+当用户上传 `.doc` 格式文件时，用 antiword 命令行工具：
+
+```bash
+antiword workspace/上传的文件.doc
+```
+
+如果需要在 Python 中处理：
+```python
+import subprocess
+result = subprocess.run(["antiword", "workspace/上传的文件.doc"], capture_output=True, text=True)
+text = result.stdout
+```
+
+### 读取 Excel (.xlsx)
+当用户说“帮我看看这个 Excel”、“分析这个表格”：
 
 ```python
 import openpyxl
@@ -46,6 +72,19 @@ ws = wb.active
 data = []
 for row in ws.iter_rows(values_only=True):
     data.append(list(row))
+```
+
+### 读取旧版 Excel (.xls)
+当用户上传 `.xls` 格式文件时：
+
+```python
+import xlrd
+
+wb = xlrd.open_workbook("workspace/上传的文件.xls")
+ws = wb.sheet_by_index(0)
+data = []
+for row_idx in range(ws.nrows):
+    data.append(ws.row_values(row_idx))
 ```
 
 ### 创建 Word 文档
