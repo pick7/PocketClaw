@@ -1,5 +1,5 @@
 ﻿=====================================
-  PocketClaw 使用指南
+  PocketClaw 口袋龙虾 - 使用指南
   你的便携 AI 助手
 =====================================
 
@@ -7,7 +7,8 @@
 然后按下面的步骤操作。
 
 所有操作都支持中文提示，不需要任何编程知识。
-支持 Windows、macOS、Linux 三平台，跨平台无缝切换。
+支持 Windows、macOS、Linux 三平台，U 盘跨平台无缝切换。
+支持 12 种 AI 模型提供商，默认使用 iFlow 心流（免费额度）。
 
 
 =====================================================================
@@ -16,33 +17,34 @@
 
 【安装前提】
 
-  v1.2.5 已实现全自动安装，首次启动会自动检测并安装所需软件：
-  - Docker Desktop（使用 U 盘内置安装包）
+  PocketClaw v1.3.2 已实现全自动安装，首次启动会自动检测并安装所需软件：
+  - Docker Desktop（使用 U 盘内置安装包或在线下载）
   - WSL2（Windows 子系统，Docker 运行必需）
   - Git（源码下载和加密工具）
   - Docker 镜像加速器（国内网络自动配置）
 
   你只需要：
   - Windows 10 或更新版本
-  - 一个智谱 AI 的 API Key（免费申请：https://bigmodel.cn）
+  - 一个 AI 模型的 API Key（支持 12 种提供商，推荐 iFlow 心流免费额度）
+    iFlow: https://iflow.cn | 智谱: https://bigmodel.cn
 
   提示：首次安装 WSL2 后可能需要重启电脑一次，重启后再次运行即可。
 
 
 【首次使用】
 
-  方式一（推荐）：统一启动器
-    1. 插入 U 盘
-    2. 打开 U 盘中的 PocketClaw 文件夹
-    3. 双击 PocketClaw.bat
-    4. 在菜单中选择 [1] 启动
-       - 首次会自动引导你运行配置向导（全中文提问）
-       - 第 1 步：输入 API Key（智谱免费申请）
-       - 第 2 步：设置 Master Password 并自动加密保护
-    5. 输入你设置的 Master Password（加密密码）
-    6. 等待容器启动（首次约 3-5 分钟）
-    7. 浏览器自动打开聊天界面
-       地址: http://127.0.0.1:18789/chat#token=<启动时显示的Token>
+  1. 插入 U 盘
+  2. 打开 U 盘中的 PocketClaw 文件夹
+  3. 双击 PocketClaw.bat
+  4. 在菜单中选择 [1] 启动
+     - 首次会自动引导你运行配置向导（全中文提问）
+     - 第 1 步：选择 AI 提供商（推荐 iFlow 心流，免费额度）
+     - 第 2 步：输入 API Key
+     - 第 3 步：设置 Master Password 并自动加密保护
+  5. 输入你设置的 Master Password（加密密码）
+  6. 等待容器启动（首次约 5-8 分钟构建镜像）
+  7. 浏览器自动打开聊天界面
+     地址: http://127.0.0.1:18789/chat#token=<启动时显示的Token>
 
   方式二：手动分步操作
     1. 双击 scripts\setup-env.bat  → 配置向导
@@ -57,28 +59,35 @@
   停止：回到 PocketClaw.bat 菜单 → 选 [2]（或双击 scripts\stop.bat）
   拔盘：等提示"可以安全拔出" → 系统托盘安全弹出 → 拔出
 
+  菜单功能一览：
+    [1] 启动服务     [2] 停止服务     [3] 查看状态
+    [4] 切换模型     [5] 备份数据     [6] 自诊断修复
+    [7] 检查更新     [8] 清理缓存     [0] 退出
+
 
 【改配置】
 
-  换 API Key    → 双击 scripts\change-api.bat
-  脚本会自动解密→引导输入→重新加密→可选重启。
+  换 API Key / 换模型 → 双击 PocketClaw.bat → 选 [4]
+  脚本会自动解密→引导选择提供商→输入 Key→重新加密→可选重启。
 
 
 【Windows 脚本速查】
 
   PocketClaw.bat              统一菜单启动器（推荐入口）
-  scripts\setup-env.bat     首次配置向导
-  scripts\encrypt.bat       加密 .env
-  scripts\decrypt.bat       解密 .env
-  scripts\start.bat         启动服务
-  scripts\stop.bat          停止服务
-  scripts\change-api.bat    更换 API Key
-  scripts\status.bat        查看运行状态
-  scripts\logs.bat          查看日志
-  scripts\backup.bat        备份到本地电脑
-  scripts\reset.bat         完全重置
-  scripts\update.bat        检查更新
+  scripts\setup-env.bat       首次配置向导
+  scripts\encrypt.bat         加密 .env
+  scripts\decrypt.bat         解密 .env
+  scripts\start.bat           启动服务
+  scripts\stop.bat            停止服务
+  scripts\change-api.bat      更换 API Key / 模型
+  scripts\status.bat          查看运行状态
+  scripts\logs.bat            查看日志
+  scripts\backup.bat          备份到本地电脑
+  scripts\reset.bat           完全重置
+  scripts\update.bat          检查更新
+  scripts\doctor.bat          自诊断修复（11 项检查）
   scripts\install-update.bat  安装更新包
+  scripts\setup-channels.bat  配置聊天频道
 
 
 =====================================================================
@@ -91,13 +100,16 @@
   2. 打开 U 盘中的 PocketClaw 文件夹
   3. 双击 PocketClaw.command
      ⚠️ 首次打开可能被 macOS 安全机制拦截（见下方"安全提示"）
-  4. 脚本会自动检测 Docker，未安装的话会自动安装
-     - 优先通过 Homebrew 安装（最可靠）
-     - 没有 Homebrew 会自动安装 Homebrew 再装 Docker
+  4. 脚本会自动检测 Docker，未安装的话会三级自动安装：
+     - 第 1 级：通过 Homebrew 安装 Docker Desktop（最可靠）
+     - 第 2 级：没有 Homebrew 则自动安装 Homebrew 再装 Docker
+     - 第 3 级：Homebrew 也失败，从 Docker 官网下载 .dmg 安装
      - 首次自动安装可能需要 5-10 分钟
   5. 在菜单中选择 [1] 启动
      - 首次会自动引导你运行配置向导（全中文提问）
-     - 第 1 步：输入 API Key（智谱免费申请）
+     - 第 1 步：选择 AI 提供商（推荐 iFlow 心流，免费额度）
+     - 第 2 步：输入 API Key
+     - 第 3 步：设置 Master Password 并自动加密保护
      - 第 2 步：设置 Master Password 并自动加密保护
   6. 输入 Master Password
   7. 等待容器启动
@@ -162,25 +174,33 @@
   停止：回到菜单 → 选 [2]（或终端运行 bash scripts/stop.sh）
   拔盘：等提示后 → 在 Finder 侧边栏点击 U 盘旁的弹出按钮 → 拔出
 
+  菜单功能一览：
+    [1] 启动服务     [2] 停止服务     [3] 查看状态
+    [4] 切换模型     [5] 备份数据     [6] 自诊断修复
+    [7] 检查更新     [8] 清理缓存     [0] 退出
+
   小提示：macOS 会在 U 盘上生成隐藏文件（._开头、.DS_Store 等），
   这些对功能没有影响。可以在菜单中选 [8] 清理。
 
 
 【改配置】
 
-  换 API Key → 双击 PocketClaw.command → 选 [4]
+  换 API Key / 换模型 → 双击 PocketClaw.command → 选 [4]
 
 
 【macOS 脚本速查】
 
   PocketClaw.command                  统一菜单启动器（推荐入口）
-  bash scripts/setup-env.sh        首次配置向导
-  bash scripts/encrypt-secrets.sh  加密 .env
-  bash scripts/decrypt-secrets.sh  解密 .env
-  bash scripts/start.sh            启动服务
-  bash scripts/stop.sh             停止服务
-  bash scripts/backup.sh           备份到本地电脑
-  bash scripts/install-update.sh   安装更新包
+  bash scripts/setup-env.sh          首次配置向导
+  bash scripts/encrypt-secrets.sh    加密 .env
+  bash scripts/decrypt-secrets.sh    解密 .env
+  bash scripts/start.sh              启动服务
+  bash scripts/stop.sh               停止服务
+  bash scripts/change-api.sh         更换 API Key / 模型
+  bash scripts/backup.sh             备份到本地电脑
+  bash scripts/doctor.sh             自诊断修复（11 项检查）
+  bash scripts/setup-channels.sh     配置聊天频道
+  bash scripts/install-update.sh     安装更新包
 
 
 =====================================================================
@@ -232,13 +252,16 @@
 
 【Linux 脚本速查】
 
-  bash scripts/setup-env.sh        首次配置向导
-  bash scripts/encrypt-secrets.sh  加密 .env
-  bash scripts/decrypt-secrets.sh  解密 .env
-  bash scripts/start.sh            启动服务
-  bash scripts/stop.sh             停止服务
-  bash scripts/backup.sh           备份到本地
-  bash scripts/install-update.sh   安装更新包
+  bash scripts/setup-env.sh          首次配置向导
+  bash scripts/encrypt-secrets.sh    加密 .env
+  bash scripts/decrypt-secrets.sh    解密 .env
+  bash scripts/start.sh              启动服务
+  bash scripts/stop.sh               停止服务
+  bash scripts/change-api.sh         更换 API Key / 模型
+  bash scripts/backup.sh             备份到本地
+  bash scripts/doctor.sh             自诊断修复
+  bash scripts/setup-channels.sh     配置聊天频道
+  bash scripts/install-update.sh     安装更新包
 
 =====================================================================
   四、注意事项
@@ -287,7 +310,7 @@
 
 【不要做的事】
 
-  1. 不要手动编辑 .env 文件 — 用 change-*.bat 脚本
+  1. 不要手动编辑 .env 文件 — 用菜单 [4] 切换模型或 change-api 脚本
   2. 不要把 Master Password 写在 U 盘上
   3. 不要在运行中直接拔 U 盘
   4. 不要把 U 盘格式化为 NTFS — 保持 ExFAT 以兼容 macOS
@@ -299,10 +322,11 @@
 
 
 =====================================================================
-  四·二、手机/平板访问（新功能！）
+  四·二、手机/平板访问
 =====================================================================
 
   PocketClaw 已默认开启局域网访问，同一 WiFi 下的手机/平板可以直接使用。
+  v1.3.2 提供了专门优化的手机聊天页面。
 
   【使用方法】
 
@@ -335,7 +359,7 @@
 =====================================================================
 
   Q1: 提示 "docker not found"
-  → Docker Desktop 未安装。v1.2.5 的启动脚本会自动安装，如自动安装失败，
+  → Docker Desktop 未安装。v1.3.2 的启动脚本会自动安装，如自动安装失败，
     请参考上方「macOS 使用指南 → Docker 安装失败？」部分手动安装。
 
   Q1.5: macOS 双击 PocketClaw.command 被拦截，提示"无法验证"
@@ -347,12 +371,11 @@
     或搜索 "Docker Desktop" 打开后再试。
 
   Q3: 首次启动很慢（超过 5 分钟）
-  → 首次需要下载源码和构建镜像，属于正常现象。后续启动只需 10-30 秒。
+  → 首次需要构建镜像，属于正常现象（约 5-8 分钟）。后续启动只需 10-30 秒。
   → 如果 U 盘是 USB 2.0 会更慢，建议使用 USB 3.0 接口。
 
   Q4: 访问 http://127.0.0.1:18789 无响应
-  → 运行状态查看脚本（Windows: scripts\status.bat）
-  → 运行日志脚本查看错误（Windows: scripts\logs.bat）
+  → 在菜单中选 [3] 查看状态，或选 [6] 自诊断修复
   → 确认 18789 端口未被其他程序占用
   → 确认 Docker Desktop 已启动且容器状态为 Running
 
@@ -366,7 +389,7 @@
 
   Q6: 启动时报 "connection timeout" 或 "auth.docker.io" 错误
   → 国内网络无法直接访问 Docker Hub。
-  → v1.2.5 启动脚本会自动检测并配置镜像加速器。
+  → v1.3.2 启动脚本会自动检测并配置镜像加速器。
   → 如果自动配置未生效，可手动配置：
     Windows/macOS: Docker Desktop → Settings → Docker Engine，
     在 JSON 最后一个 } 之前加上（注意前面的逗号）：
@@ -380,36 +403,40 @@
 
   Q7: 想要完全重置
   → Windows: 运行 scripts\reset.bat，输入 YES 确认。
+  → macOS/Linux: bash scripts/reset.sh
   → 这会删除所有数据但保留脚本和配置模板。
 
   Q8: API 报余额不足
-  → 登录智谱开放平台充值（GLM-4.7-Flash 为免费模型，一般不会遇到）：
-    智谱: https://open.bigmodel.cn/
+  → iFlow 心流免费额度用完后可充值或切换其他提供商
+  → 智谱 GLM-4.7-Flash 为永久免费模型
+  → 在菜单选 [4] 切换到其他提供商
 
   Q9: U 盘上出现很多隐藏文件（._ 开头、.DS_Store 等）
   → 这是 macOS 自动生成的系统文件，全部可以安全删除，不影响功能。
-  → 常见的有：._文件名、.DS_Store、.Spotlight-V100、.Trashes、.fseventsd
-  → 清理方法：macOS 下双击 PocketClaw.command，选菜单 [8] 清理。
+  → 清理方法：菜单选 [8] 清理缓存。
   → 预防 .DS_Store：在 macOS 终端执行以下命令（只需一次）：
     defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
-  → ._文件（资源分支文件）暂时无法完全禁止，定期清理即可。
 
   Q10: 需要代理才能访问外网
   → start 脚本启动时会自动询问是否需要代理。
   → 默认代理地址：http://127.0.0.1:7897
 
+  Q11: 如何检查更新？
+  → 在菜单中选 [7] 检查更新，会自动连接服务器查询最新版本。
+  → 也可以访问 https://pocketclaw.cn 查看最新版本信息。
+
 =====================================================================
-  七、聊天频道配置（可选）
+  六、聊天频道配置（可选）
 =====================================================================
 
-  PocketClaw v1.2.5 支持 11 种聊天频道：
+  PocketClaw v1.3.2 支持 11 种聊天频道：
 
   WebChat（内置，默认开启）、Telegram、Discord、Slack、WhatsApp、
   Signal、Google Chat、Microsoft Teams、Matrix、BlueBubbles (iMessage)、Zalo
 
   配置方法：
-    Windows: 双击 PocketClaw.bat → 选 [6] 配置频道
-    macOS:   双击 PocketClaw.command → 选 [6] 配置频道
+    Windows: 双击 PocketClaw.bat → 选 [4] → 按提示操作
+    macOS:   双击 PocketClaw.command → 选 [4]
     手动:    bash scripts/setup-channels.sh
 
   配置后重启服务即可生效。
@@ -417,15 +444,11 @@
 
 
 =====================================================================
-PocketClaw v1.2.5 | 最后更新: 2026-03-04
+  七、故障自助排除指南
 =====================================================================
 
-
-=====================================================================
-  六、故障自助排除指南
-=====================================================================
-
-  遇到错误时，按以下步骤逐一排查：
+  遇到错误时，推荐先使用菜单 [6] 自诊断修复，自动运行 11 项检查并修复常见问题。
+  如仍无法解决，按以下步骤逐一排查：
 
   【第 1 步：检查 Docker 是否在运行】
 
@@ -476,4 +499,10 @@ PocketClaw v1.2.5 | 最后更新: 2026-03-04
     1. 运行 docker logs pocketclaw > pocketclaw-log.txt 2>&1
     2. 把 pocketclaw-log.txt 和报错截图发给博主
     3. 说明：操作系统版本、Docker 版本
+
+
+=====================================================================
+PocketClaw 口袋龙虾 v1.3.2 | 最后更新: 2026-03-09
+官网: https://pocketclaw.cn
+=====================================================================
 =====================================================================

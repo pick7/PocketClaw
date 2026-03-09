@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title PocketClaw AI 助手
+title PocketClaw 口袋龙虾
 color 0A
 set "SCRIPT_DIR=%~dp0"
 cd /d "%SCRIPT_DIR%"
@@ -19,9 +19,14 @@ if errorlevel 1 (
 cls
 echo.
 echo   ============================================
-echo        PocketClaw AI 助手 - 控制面板
+echo        PocketClaw 口袋龙虾 - 控制面板
 echo   ============================================
 echo.
+set "PC_VER="
+if exist "%PROJECT_DIR%\VERSION" set /p PC_VER=<"%PROJECT_DIR%\VERSION"
+if defined PC_VER (
+    echo   [版本] v!PC_VER!
+)
 REM 检测当前状态
 docker info >nul 2>&1
 if !ERRORLEVEL! neq 0 (

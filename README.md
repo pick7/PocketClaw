@@ -1,19 +1,21 @@
-# 🦞 PocketClaw — 便携式 PocketClaw 个人 AI 助手
+# 🦞 PocketClaw 口袋龙虾 — 便携式个人 AI 助手
 
-> 将 PocketClaw 装入 U 盘，随插随用，安全加密，跨平台便携。
+> 将 AI 助手装入 U 盘，随插随用，安全加密，跨平台便携。
 
 ---
 
 ## 1. 项目概述
 
-本项目的目标是将 [OpenClaw](https://github.com/openclaw/openclaw)（一款开源个人 AI 助手，支持多频道消息、浏览器控制等功能）部署到一个 **U 盘** 中，实现：
+本项目基于 [OpenClaw](https://github.com/openclaw/openclaw)（开源个人 AI 助手）构建便携式 U 盘部署方案，实现：
 
-- **随插随用**：插入任意一台电脑，自动安装 Docker 并启动
+- **随插随用**：插入任意电脑，双击启动，Docker 环境全自动安装
 - **数据自包含**：所有配置、数据、凭证均存储在 U 盘内
-- **高安全性**：敏感信息加密存储，容器隔离运行
-- **友好界面**：通过 Web 管理面板配置 API Key、服务等
-- **免费模型**：默认使用智谱 GLM-4.7-Flash（永久免费、200K 上下文）
+- **高安全性**：AES-256-CBC 加密存储，容器安全加固，明文自动擦除
+- **多提供商**：支持 12 家 AI 提供商（iFlow、智谱、DeepSeek、OpenAI、Claude 等）
+- **免费可用**：默认使用智谱 GLM-4.7-Flash（永久免费、200K 上下文）
+- **手机访问**：局域网内手机/平板直接使用，支持 PWA 添加到主屏幕
 - **全自动化**：Docker、WSL2、Git 自动安装，镜像加速自动配置
+- **一键更新**：菜单内检查更新，自动下载安装新版本
 
 ---
 
@@ -21,38 +23,41 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    U 盘 (ExFAT)                    │
+│                    U 盘 (ExFAT)                         │
 │                                                         │
-│  PocketClaw/                                          │
+│  PocketClaw/                                            │
+│  ├── PocketClaw.bat / .command   ← 双击启动（统一入口）  │
 │  ├── docker-compose.yml          ← 容器编排配置          │
-│  ├── .env.example                ← 环境变量模板            │
-│  ├── secrets/                                            │
+│  ├── Dockerfile.custom           ← 自定义镜像构建        │
+│  ├── VERSION                     ← 版本号（更新使用）    │
+│  ├── secrets/                                           │
 │  │   └── .env.encrypted          ← 加密的敏感配置        │
 │  ├── config/                                            │
-│  │   ├── openclaw.json           ← PocketClaw 主配置       │
-│  │   └── workspace/              ← Agent config/workspace          │
-│  ├── data/                                              │
-│  │   ├── credentials/            ← 频道凭证 (加密)       │
-│  │   └── sessions/               ← 会话数据              │
-│  ├── scripts/                                           │
-│  │   ├── start.sh                ← macOS/Linux 启动脚本  │
-│  │   ├── start.bat               ← Windows 启动脚本      │
-│  │   ├── stop.sh                 ← macOS/Linux 停止脚本  │
-│  │   └── setup-env.sh            ← 首次配置向导          │
-│  └── README.md                   ← 本文件                │
+│  │   ├── openclaw.json           ← 主配置文件            │
+│  │   ├── providers.json          ← 12 家 AI 提供商配置   │
+│  │   ├── mobile.html             ← 手机聊天界面          │
+│  │   ├── setup.html              ← Web 配置界面          │
+│  │   └── workspace/              ← Agent 行为/人格/技能  │
+│  ├── 工作区/                     ← 用户可见的 Agent 配置  │
+│  ├── data/                       ← 持久化数据            │
+│  │   ├── credentials/            ← 频道凭证              │
+│  │   ├── sessions/               ← 会话历史              │
+│  │   └── logs/                   ← 运行日志              │
+│  └── scripts/                    ← 管理脚本              │
 │                                                         │
 │  ┌──────────── Docker 容器 ────────────┐                │
-│  │  PocketClaw Gateway (:18789)          │                │
-│  │  ├── Pi Agent (AI 对话引擎)          │                │
-│  │  └── WebChat UI (:18789/chat)       │                │
+│  │  OpenClaw Gateway (:18789)          │                │
+│  │  ├── AI Agent (对话引擎)            │                │
+│  │  ├── WebChat UI (/chat)             │                │
+│  │  └── Chromium 浏览器 (无头)         │                │
 │  └─────────────────────────────────────┘                │
 └─────────────────────────────────────────────────────────┘
          │
-         ▼
-  ┌──────────────┐
-  │  智谱 GLM-4    │
-  │  (永久免费)   │
-  └──────────────┘
+         ▼  支持 12 家 AI 提供商
+  ┌──────────────────────────────┐
+  │  iFlow / 智谱 / DeepSeek     │
+  │  OpenAI / Claude / Gemini…   │
+  └──────────────────────────────┘
 ```
 
 ---
@@ -61,50 +66,70 @@
 
 ```
 PocketClaw/
+├── PocketClaw.bat                     # Windows 统一菜单启动器
+├── PocketClaw.command                 # macOS 统一菜单启动器
 ├── README.md                          # 本文件（项目说明）
-├── 注意事项.md                        # 使用注意事项
+├── 使用指南.txt                       # 用户使用指南
+├── CHANGELOG.md                       # 版本变更记录
 ├── LICENSE.md                         # 许可证
+├── VERSION                            # 版本号文件（更新检查使用）
 │
 ├── docker-compose.yml                 # Docker 容器编排主文件
-├── Dockerfile.custom                  # 自定义镜像构建（含代理配置等）
+├── Dockerfile.custom                  # 自定义镜像构建
 │
 ├── .env.example                       # 环境变量模板（不含敏感信息）
-├── .env                               # 实际环境变量（运行时生成，.gitignore）
-├── .gitignore                         # Git 忽略规则
+├── .env.channels.example             # 频道配置变量参考
 │
 ├── config/
-│   ├── openclaw.json                  # PocketClaw 主配置文件
-│   └── workspace/                     # Agent config/workspace
+│   ├── openclaw.json                  # 主配置文件（模型、Gateway 等）
+│   ├── providers.json                 # 12 家 AI 提供商配置
+│   ├── mobile.html                    # 手机聊天界面（PWA）
+│   ├── setup.html                     # Web 配置界面
+│   └── workspace/                     # Agent 内部工作空间
 │       ├── AGENTS.md                  # Agent 行为指令
 │       ├── SOUL.md                    # Agent 人格设定
+│       ├── .provider                  # 当前选中提供商
+│       ├── .bound_providers           # 已绑定提供商列表
+│       ├── .gateway_token             # 随机访问 Token
 │       └── skills/                    # 已安装的 Skills
 │
-├── data/                              # 持久化数据（Docker Volume 挂载点）
+├── 工作区/                            # 用户可见的 Agent 配置（v1.3.0+）
+│   ├── AGENTS.md                      # Agent 行为指令（可编辑）
+│   ├── SOUL.md                        # Agent 人格设定（可编辑）
+│   └── skills/                        # 技能库
+│
+├── data/                              # 持久化数据
 │   ├── credentials/                   # 频道凭证
 │   ├── sessions/                      # 会话历史
-│   └── logs/                          # 运行日志
+│   ├── logs/                          # 运行日志
+│   ├── skills/                        # 动态技能
+│   └── .build_hash                    # 镜像指纹（智能构建缓存）
 │
 ├── secrets/                           # 加密敏感文件存储
-│   └── .env.encrypted                 # AES-256-CBC 加密的 .env 文件
+│   ├── .env.encrypted                 # AES-256-CBC 加密的 .env
+│   └── master.key.example             # Key 管理建议
 │
-├── VERSION                            # 版本号文件 (远程更新使用)
-│
-└── scripts/                           # 便携启动/管理脚本
-    ├── start.sh / start.bat           # 一键启动
-    ├── stop.sh / stop.bat             # 一键停止
-    ├── setup-env.sh / setup-env.bat   # 首次运行配置向导
+└── scripts/                           # 管理脚本
+    ├── _common.sh                     # 共享函数库
+    ├── _docker.sh                     # Docker 安装/镜像加速
+    ├── _build.sh                      # 镜像智能构建
+    ├── _update.sh                     # 版本检查/更新
+    ├── _https.sh                      # HTTPS 证书管理
+    ├── start.sh / start.bat           # 启动服务
+    ├── stop.sh / stop.bat             # 停止服务
+    ├── setup-env.sh / setup-env.bat   # 首次配置向导
     ├── encrypt-secrets.sh / encrypt.bat  # 加密 .env
     ├── decrypt-secrets.sh / decrypt.bat  # 解密 .env
-    ├── change-api.bat                 # 修改 API Key
-    ├── status.bat                     # 查看容器状态
-    ├── logs.bat                       # 查看日志
-    ├── backup.sh / backup.bat         # 备份
-    ├── reset.bat                      # 重置服务
-    ├── update.bat                     # 更新 PocketClaw
-    ├── verify-integrity.sh             # SHA-256 完整性校验
-    ├── create-update.sh               # 生成更新包 (维护者)
-    ├── install-update.bat             # 安装更新包 (Windows)
-    └── install-update.sh              # 安装更新包 (macOS/Linux)
+    ├── change-api.sh / change-api.bat # 切换 AI 提供商/API Key
+    ├── backup.sh / backup.bat         # 备份到本地电脑
+    ├── doctor.sh / doctor.bat         # 自诊断修复（11 项检查）
+    ├── setup-channels.sh / setup-channels.bat  # 频道配置向导
+    ├── update.bat                     # Windows 版本检查+安装
+    ├── reset.sh / reset.bat           # 完全重置
+    ├── install-update.sh / install-update.bat  # 安装更新包
+    ├── create-update.sh               # 生成更新包（维护者）
+    ├── entrypoint.sh                  # 容器入口脚本
+    └── gateway-patch.py               # Gateway 配置补丁
 ```
 
 ---
@@ -129,27 +154,28 @@ PocketClaw/
 
 ---
 
-## 5. 安装步骤
+## 5. 安装与首次使用
 
 ### 5.1 前置准备（每台新电脑仅需一次）
 
-**Windows（v1.1.1 全自动安装）：**
+**Windows（全自动安装）：**
 
 Windows 用户无需手动安装任何软件。首次启动 `PocketClaw.bat` 时会自动：
 - 检测并启用 WSL2
 - 安装 Docker Desktop（使用 U 盘内置安装包）
-- 安装 Git
-- 配置 Docker 镜像加速器
+- 安装 Git（用于加密工具）
+- 配置 Docker 镜像加速器（国内网络自动检测）
 
 只需确保系统版本为 Windows 10 或更新。
 
-**macOS：**
+**macOS（三级自动安装）：**
 
-需要手动安装 Docker Desktop：
-```bash
-brew install --cask docker
-```
-镜像加速器会在首次启动时自动检测并配置。
+首次启动 `PocketClaw.command` 时会自动检测并安装 Docker：
+1. **优先**：通过 Homebrew 安装（最快最可靠）
+2. **备选**：通过 Colima 轻量级容器运行时
+3. **兜底**：直接下载 Docker Desktop DMG（~600MB）
+
+没有 Homebrew 时会自动安装 Homebrew。
 
 **Linux：**
 ```bash
@@ -158,95 +184,47 @@ sudo usermod -aG docker $USER
 # 注销重新登录后生效
 ```
 
----
+### 5.2 首次启动
 
-### 5.2 Docker Desktop 代理配置（如需翻墙访问 GitHub）
+1. 将 PocketClaw 文件夹拷贝到 U 盘
+2. 双击 `PocketClaw.bat`（Windows）或 `PocketClaw.command`（macOS）
+3. 在菜单中选择 **[1] 启动**
+4. 自动进入配置向导：
+   - **第 1 步**：选择 AI 提供商（推荐 iFlow 或智谱，均免费）
+   - **第 2 步**：输入 API Key（脚本会自动打开获取链接）
+   - **第 3 步**：设置 Master Password（加密密码）
+5. 等待 Docker 镜像构建（首次约 5-8 分钟）
+6. 浏览器自动打开聊天界面
 
-如果当前网络需要代理才能访问 GitHub / Docker Hub：
+### 5.3 启动流程（自动执行）
 
-1. 打开 Docker Desktop → Settings → Resources → Proxies
-2. 启用 Manual proxy configuration
-3. 填入：
-   - HTTP Proxy: `http://127.0.0.1:7897`
-   - HTTPS Proxy: `http://127.0.0.1:7897`
-4. Apply & Restart
-
-或在终端设置临时代理：
-
-```bash
-export HTTP_PROXY=http://127.0.0.1:7897
-export HTTPS_PROXY=http://127.0.0.1:7897
-export ALL_PROXY=socks5://127.0.0.1:7897
+```
+双击启动器
+  → 检测/安装 Docker
+  → 解密 .env（输入 Master Password）
+  → 智能构建镜像（指纹比对，秒级二次启动）
+  → docker compose up -d
+  → 等待 Gateway 就绪
+  → 生成随机访问 Token
+  → 打开浏览器
+  → 安全擦除明文 .env
 ```
 
----
+### 5.4 代理配置（可选）
 
-### 5.3 初始化项目
+如果网络需要代理才能访问外网：
 
-v1.1.1 已预置 PocketClaw 源码和完整目录结构，无需手动初始化。
+启动脚本会在首次运行时询问是否需要代理，默认地址 `http://127.0.0.1:7897`。
 
-首次运行 `PocketClaw.bat`（Windows）或 `PocketClaw.command`（macOS）时，启动脚本会自动：
-1. 检查并下载源码（如 U 盘中不存在）
-2. 创建所需目录结构
-3. 引导配置向导
-
-> **注意**：`openclaw-src/` 只是用于 Docker 构建的源码，实际运行的 PocketClaw 在容器内部。
-
----
-
-### 5.4 Docker Compose 配置
-
-以下是 `docker-compose.yml` 的完整内容（会在项目初始化时自动生成）：
-
-```yaml
-# docker-compose.yml — PocketClaw 便携部署
-version: "3.8"
-
-services:
-  pocketclaw:
-    build:
-      context: ./openclaw-src
-      dockerfile: Dockerfile
-    container_name: pocketclaw
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:18789:18789"    # Gateway（仅本机可访问）
-    volumes:
-      # 将 U 盘中的配置和数据挂载到容器内
-      - ./config/openclaw.json:/root/.openclaw/openclaw.json:ro
-      - ./config/workspace:/root/.openclaw/workspace
-      - ./data/credentials:/root/.openclaw/credentials
-      - ./data/sessions:/root/.openclaw/sessions
-      - ./data/logs:/root/.openclaw/logs
-    env_file:
-      - .env
-    environment:
-      - NODE_ENV=production
-    networks:
-      - pocketclaw-net
-    security_opt:
-      - no-new-privileges:true    # 安全加固：禁止提权
-    read_only: false               # PocketClaw 需要写入部分运行时文件
-    tmpfs:
-      - /tmp:size=100M             # 限制临时文件大小
-
-networks:
-  pocketclaw-net:
-    driver: bridge
-    internal: false                # 需要访问外部 API
-```
+也可在 Docker Desktop 中手动设置：Settings → Resources → Proxies
 
 ---
 
 ## 6. 环境变量配置
 
-### 6.1 `.env.example` 模板
+首次配置通过交互式向导完成，无需手动编辑文件。
 
-将 `.env.example` 复制为 `.env` 并填入实际值：
-
-```bash
-cp .env.example .env
-```
+配置向导会自动生成 `.env` 文件并加密存储。如需了解变量含义，参考 `.env.example`：
 
 ```env
 # ============================================
@@ -254,51 +232,56 @@ cp .env.example .env
 # ============================================
 
 # ---------- LLM API Keys ----------
-# 智谱 GLM (默认，GLM-4.7-Flash 永久免费)
-ZHIPU_API_KEY=your-zhipu-api-key-here
+OPENAI_API_KEY=your-api-key-here       # 由配置向导自动填写
 
 # ---------- Gateway 安全 ----------
-GATEWAY_AUTH_PASSWORD=your-strong-password-here
-GATEWAY_BIND=loopback
+GATEWAY_AUTH_PASSWORD=auto-generated    # 随机生成
 
 # ---------- 代理（可选） ----------
 # HTTP_PROXY=http://127.0.0.1:7897
-# HTTPS_PROXY=http://127.0.0.1:7897
 ```
 
-> ⚠️ **安全提醒**：`.env` 文件包含所有敏感信息，务必使用加密存储（详见第 8 节安全策略）。
+> ⚠️ **安全提醒**：`.env` 文件包含所有敏感信息。启动脚本会自动加密存储、安全擦除明文。
 
 ---
 
-## 7. API 模型配置详解
+## 7. AI 提供商配置
 
-### 7.1 智谱 GLM 配置（默认）
+### 7.1 支持的提供商（12 家）
 
-v1.1.1 默认使用智谱 GLM-4.7-Flash（永久免费）。首次启动时配置向导会引导你输入 API Key。
+| 提供商 | 推荐模型 | 价格 | 特点 |
+|--------|---------|------|------|
+| **iFlow 心流** | DeepSeek V3.2, Qwen3, Kimi K2 | 免费 | 多模型聚合，推荐首选 |
+| **智谱 AI** | GLM-4.7-Flash | 免费 | 200K 上下文，默认配置 |
+| **硅基流动** | DeepSeek, Qwen, GLM | 免费 | 开源模型聚合 |
+| **DeepSeek** | V3, R1 | 付费 | 性价比最高 |
+| **OpenAI** | GPT-4o, o3-mini, GPT-4.1 | 付费 | 业界标杆 |
+| **Anthropic** | Claude Sonnet 4, Opus 4 | 付费 | 长文本能力 |
+| **Google** | Gemini 2.5 Flash/Pro | 付费 | 多模态强 |
+| **xAI** | Grok 3, Grok 3 Mini | 付费 | — |
+| **Moonshot** | Kimi moonshot-v1 | 付费 | 128K 上下文 |
+| **通义千问** | Qwen-Turbo/Plus/Max | 付费 | 阿里云 |
+| **零一万物** | Yi-Lightning, Yi-Large | 付费 | 高性能 |
+| **智谱付费** | GLM-4-Plus, GLM-4-Long | 付费 | 1M 超长上下文 |
 
-1. 前往 [智谱开放平台](https://bigmodel.cn) 注册账号
-2. 在控制台创建 API Key
-3. 启动时按提示输入即可
+### 7.2 切换提供商
 
-配置文件 `config/openclaw.json` 中的默认配置：
+**方法一**：通过菜单切换（推荐）
+- Windows：`PocketClaw.bat` → 选 **[4]**
+- macOS：`PocketClaw.command` → 选 **[4]**
 
-```jsonc
-{
-  "agent": {
-    "model": "zhipu/glm-4.7-flash",
-    "providers": {
-      "zhipu": {
-        "apiKey": "${ZHIPU_API_KEY}"
-      }
-    }
-  }
-}
+**方法二**：运行脚本
+```bash
+bash scripts/change-api.sh          # macOS/Linux
+scripts\change-api.bat              # Windows
 ```
 
-### 7.2 其他模型提供商（高级）
+脚本会引导你选择提供商、输入 API Key，自动重新加密并可选重启容器。
 
-PocketClaw 支持多种模型提供商，如需使用其他模型，可修改 `config/openclaw.json` 中的 provider 配置。
-常见可选提供商：DeepSeek、MiniMax、Kimi (Moonshot) 等。具体配置方法请参考 [PocketClaw 官方文档](https://docs.openclaw.ai/)。
+### 7.3 提供商配置文件
+
+所有提供商的 API 地址、默认模型、可用模型列表定义在 `config/providers.json` 中。
+运行时的当前选择记录在 `config/workspace/.provider` 中。
 
 ---
 
@@ -353,25 +336,19 @@ scripts\decrypt.bat
 
 ### 8.3 容器安全加固
 
-Docker 容器安全策略：
+Docker 容器安全策略（docker-compose.yml 中已配置）：
 
-```yaml
-# docker-compose.yml 中的安全配置
-security_opt:
-  - no-new-privileges:true    # 禁止容器内提权
-cap_drop:
-  - ALL                       # 丢弃所有 Linux capabilities
-cap_add:
-  - NET_BIND_SERVICE          # 仅保留端口绑定能力
-mem_limit: 2g                 # 内存上限 2GB
-pids_limit: 128               # 进程数上限，防止 fork 炸弹
-tmpfs:
-  - /tmp:size=100M,noexec,nosuid  # 临时文件禁止执行
-```
+- `read_only: true` — 根文件系统只读
+- `security_opt: no-new-privileges` — 禁止提权
+- `cap_drop: ALL` — 丢弃所有 Linux capabilities
+- `mem_limit: 2g` — 内存上限 2GB
+- `pids_limit: 128` — 进程数上限，防止 fork 炸弹
+- `tmpfs` — /tmp、/var/log 等隔离到临时文件系统
+- 非 root 用户（node）运行
 
-**网络隔离：**
-- Gateway 端口绑定 `127.0.0.1:18789`，同一局域网的其他设备无法访问
-- Docker bridge 网络隔离容器间通信
+**网络配置：**
+- Gateway 端口绑定 `0.0.0.0:18789`（支持局域网手机访问）
+- 访问需要 Token 认证（每次启动随机生成）
 
 **已知限制（Docker 固有）：**
 - `docker inspect pocketclaw` 可查看所有环境变量（包括 API Key）
@@ -382,19 +359,13 @@ tmpfs:
 
 ### 8.4 访问控制与 U 盘安全
 
-**Gateway 密码保护：**
-```jsonc
-// config/openclaw.json
-{
-  "gateway": {
-    "bind": "loopback",                    // 仅本机访问
-    "auth": {
-      "mode": "password",                  // 需要密码才能访问 WebChat/控制面板
-      "password": "${GATEWAY_AUTH_PASSWORD}"
-    }
-  }
-}
+**Gateway Token 认证：**
+
+每次启动时自动生成随机 8 位 Token，访问地址格式：
 ```
+http://127.0.0.1:18789/#token=<随机Token>
+```
+Token 显示在启动菜单的 `[地址]` 行中。
 
 **U 盘物理安全建议：**
 1. 使用带硬件加密的 U 盘（如 Kingston IronKey），或使用 VeraCrypt 创建加密分区
@@ -413,68 +384,87 @@ history -c
 
 ---
 
-## 9. 日常使用指南
+## 9. 日常使用
 
-### 9.1 一键启动（macOS/Linux）
+### 9.1 统一菜单（推荐入口）
 
+双击 `PocketClaw.bat`（Windows）或 `PocketClaw.command`（macOS），进入控制面板：
+
+```
+  ============================================
+       PocketClaw 口袋龙虾 - 控制面板
+  ============================================
+
+  [版本] v1.3.2
+  [状态] PocketClaw 运行中
+  [地址] http://127.0.0.1:18789/#token=xxx
+  [手机] http://192.168.0.x:18789/mobile.html#token=xxx
+  [模型] iFlow 心流 / deepseek-v3.2  [正常]
+
+    [1]  启动 PocketClaw
+    [2]  停止 PocketClaw（拔U盘前必须先停止）
+    [3]  打开聊天页面
+    [4]  切换模型/API Key
+    [5]  备份数据
+    [6]  自诊断修复
+    [7]  检查更新
+    [0]  退出
+```
+
+### 9.2 启动与停止
+
+**启动**：选菜单 [1] → 输入 Master Password → 等待容器就绪 → 浏览器自动打开
+
+**停止**：选菜单 [2] → 容器关闭 → Docker 退出 → 清理隐藏文件 → 提示安全拔出 U 盘
+
+**手动操作**（无需菜单）：
 ```bash
-# 插入 U 盘后，进入项目目录
-cd /Volumes/你的U盘/PocketClaw   # macOS
-# 或 cd /media/你的用户名/你的U盘/PocketClaw  # Linux
-
-# 运行启动脚本
-bash scripts/start.sh
+bash scripts/start.sh     # 启动
+bash scripts/stop.sh      # 停止
 ```
 
-**`scripts/start.sh` 的工作流程：**
-1. 检查 Docker 是否运行
-2. 解密 `secrets/.env.encrypted` → `.env`（提示输入密码）
-3. 执行 `docker compose up -d` 启动容器
-4. 等待 Gateway 就绪
-5. 自动打开浏览器访问 `http://127.0.0.1:18789`
-6. 删除明文 `.env`
+### 9.3 切换模型/API Key
 
-### 9.2 停止服务
+选菜单 [4]，脚本会引导你选择新的 AI 提供商、输入 API Key，自动重新加密。
 
-```bash
-bash scripts/stop.sh
-```
+### 9.4 自诊断修复
 
-**`scripts/stop.sh` 的工作流程：**
-1. 执行 `docker compose down`
-2. 删除残留的明文 `.env`（如有）
-3. 清理 Docker 缓存
-4. 提示可以安全拔出 U 盘
+选菜单 [6]，运行 11 项自动检查：Docker 安装、引擎运行、镜像存在、容器状态、
+端口响应、配置完整性、API 可用性、日志分析等。自动生成诊断报告。
 
-### 9.3 Windows 下的启动
+### 9.5 检查更新
 
-```cmd
-:: 双击 scripts\start.bat 或在命令行执行：
-cd E:\PocketClaw
-scripts\start.bat
-```
+选菜单 [7]，从 pocketclaw.cn 检查最新版本。如有更新，自动下载 ZIP 包并安装，
+保留用户数据和加密配置不受影响。
+
+### 9.6 备份
+
+选菜单 [5]，将配置、加密文件、脚本等同步到 `~/PocketClaw_Backup/`。
+自动保留最近 5 个快照，旧快照自动删除。
 
 ---
 
-## 10. Web 管理界面
-
-PocketClaw 自带 Web 控制面板和 WebChat 界面，启动后即可通过浏览器访问。
+## 10. Web 界面与手机访问
 
 ### 10.1 访问地址
 
 | 页面 | 地址 | 说明 |
 |------|------|------|
-| 控制面板 | `http://127.0.0.1:18789` | 查看状态、管理配置 |
-| WebChat | `http://127.0.0.1:18789/chat` | 直接与 AI 对话 |
-| 健康检查 | `http://127.0.0.1:18789/health` | 检查服务是否正常 |
+| 聊天界面 | `http://127.0.0.1:18789/#token=<Token>` | 电脑端 AI 对话 |
+| 手机界面 | `http://<局域网IP>:18789/mobile.html#token=<Token>` | 手机/平板专属 |
+| 健康检查 | `http://127.0.0.1:18789/health` | 服务状态 |
 
-### 10.2 可在 Web 界面完成的操作
+启动后菜单会直接显示完整地址（含 Token），复制粘贴即可。
 
-- 查看 Gateway 运行状态和已连接的频道
-- 与 AI 助手对话（WebChat）
-- 查看会话历史
-- 使用聊天命令管理（如 `/status`、`/new`、`/compact`）
-- 切换模型和思考级别
+### 10.2 手机/平板访问
+
+1. 确保手机和电脑连接**同一 WiFi**
+2. 启动后菜单会显示 `[手机]` 地址
+3. 在手机浏览器打开该地址
+
+**添加到主屏幕（像 APP 一样使用）**：
+- iPhone: Safari → 分享按钮 → "添加到主屏幕"
+- Android: Chrome → 右上菜单 → "添加到主屏幕"
 
 ### 10.3 聊天命令速查
 
@@ -583,375 +573,137 @@ bash scripts/stop.sh && bash scripts/start.sh
 
 ---
 
-## 12. 代理网络配置
+## 12. 代理网络配置（可选）
 
-当前电脑访问 GitHub 需要代理 `127.0.0.1:7897`，以下是各环节的代理配置方法。
+如果网络需要代理才能访问外网，启动脚本会在首次运行时询问是否需要代理。
 
-### 12.1 Git 克隆时使用代理
+默认代理地址：`http://127.0.0.1:7897`
 
-```bash
-git clone --depth 1 \
-  -c http.proxy=http://127.0.0.1:7897 \
-  -c https.proxy=http://127.0.0.1:7897 \
-  https://github.com/openclaw/openclaw.git openclaw-src
-```
+也可在 Docker Desktop 中手动设置：Settings → Resources → Proxies
 
-### 12.2 Docker 构建时使用代理
-
-在 `docker-compose.yml` 的 build 段添加：
-
-```yaml
-services:
-  pocketclaw:
-    build:
-      context: ./openclaw-src
-      dockerfile: Dockerfile
-      args:
-        - HTTP_PROXY=http://host.docker.internal:7897
-        - HTTPS_PROXY=http://host.docker.internal:7897
-```
-
-> `host.docker.internal` 是 Docker Desktop 提供的特殊地址，指向宿主机的 `127.0.0.1`。
-
-### 12.3 容器运行时使用代理
-
-如果容器内的 API 调用也需要代理（通常国内模型 API 不需要）：
-
-```yaml
-environment:
-  - HTTP_PROXY=http://host.docker.internal:7897
-  - HTTPS_PROXY=http://host.docker.internal:7897
-  - NO_PROXY=localhost,127.0.0.1,open.bigmodel.cn
-```
+> **提示**：国内模型（智谱、iFlow、DeepSeek 等）通常不需要代理。
 
 ---
 
-## 13. 远程更新机制
+## 13. 版本更新机制
 
-### 13.1 功能概述
+### 13.1 在线检查更新（v1.3.2+）
 
-本项目支持远程更新：维护者在本地修改代码后，生成一个更新包（zip），发送给使用 U 盘的朋友，朋友双击安装即可获得最新版本。
+在菜单中选择 **[7] 检查更新**，自动从 pocketclaw.cn 检查最新版本。
 
-**核心特性：**
-- **一键安装**：朋友解压后双击 `install-update.bat` 即可
-- **数据安全**：更新不影响朋友的加密配置、会话数据、Agent 人设
-- **自动回滚**：安装前自动备份被替换的文件，出问题可恢复
-- **自动定位**：安装器自动扫描 U 盘位置，无需手动输入路径
+更新流程：
+1. 从服务器获取 `version.json`，比较当前版本
+2. 显示更新内容（changelog）
+3. 用户确认后自动下载 ZIP 包
+4. 解压并覆盖脚本/配置（保留用户数据不动）
+5. 清理构建缓存，下次启动自动重建镜像
 
-### 13.2 维护者工作流程
+### 13.2 手动更新包安装
 
-```bash
-# 1. 在本地备份目录（或 U 盘）上修改代码
-cd ~/PocketClaw_Backup/v1.0.2/
+也可以通过线下分发更新包：
 
-# 2. 修改完成后，更新 VERSION 文件
-echo "1.0.3" > VERSION
+1. 收到 ZIP 更新包
+2. 解压到任意位置
+3. 双击 `install-update.bat`（Windows）或运行 `bash install-update.sh`（Mac）
+4. 安装器自动定位 U 盘 → 备份旧文件 → 安装新版本
 
-# 3. 生成更新包
-bash scripts/create-update.sh
-# 输入新版本号、更新说明
-# 输出: ~/PocketClaw_Update_v1.0.2.zip
-
-# 4. 将 zip 发送给朋友（微信、邮件等）
-```
-
-### 13.3 朋友安装流程
-
-```
-1. 收到 zip 文件
-2. 解压到桌面或任意位置
-3. 插入 U 盘
-4. 双击 install-update.bat (Windows) 或 bash install-update.sh (Mac)
-5. 安装器自动找到 U 盘 → 确认 → 安装完成
-6. 可选择立即启动 PocketClaw
-```
-
-### 13.4 更新包结构
-
-```
-PocketClaw_Update_v1.0.2/
-├── install-update.bat     ← 朋友双击这个 (Windows)
-├── install-update.sh      ← macOS/Linux
-├── UPDATE_INFO.txt        ← 更新说明（版本号、日期、changelog）
-└── _payload/              ← 更新文件（镜像项目结构，不含用户数据）
-    ├── VERSION
-    ├── docker-compose.yml
-    ├── scripts/
-    │   ├── start.bat
-    │   └── ...
-    └── config/
-        └── openclaw.json
-```
-
-### 13.5 更新保护策略
+### 13.3 更新保护策略
 
 | 目录/文件 | 更新时行为 | 原因 |
 |-----------|-----------|------|
 | `scripts/` | ✅ 覆盖更新 | 脚本修复/新功能 |
 | `docker-compose.yml` | ✅ 覆盖更新 | 容器配置变更 |
 | `Dockerfile.custom` | ✅ 覆盖更新 | 镜像构建变更 |
-| `README.md` / `注意事项.md` | ✅ 覆盖更新 | 文档更新 |
 | `config/openclaw.json` | ✅ 覆盖更新 | 核心配置变更 |
-| `secrets/` | ❌ 保留不动 | 朋友的加密密钥 |
+| `config/providers.json` | ✅ 覆盖更新 | 提供商更新 |
+| `README.md` / `使用指南.txt` | ✅ 覆盖更新 | 文档更新 |
+| `secrets/` | ❌ 保留不动 | 加密密钥 |
 | `data/` | ❌ 保留不动 | 会话、日志、凭证 |
 | `.env` | ❌ 保留不动 | 运行时配置 |
-| `openclaw-src/` | ❌ 保留不动 | 朋友本地已有源码 |
-| `config/workspace/` | ❌ 保留不动 | Agent 人格/技能定制 |
-
-### 13.6 回滚
-
-如果更新后出现问题：
-```
-1. 进入 U 盘目录: data\_rollback_v旧版本号\
-2. 将里面的文件复制回 PocketClaw 根目录即可
-```
+| `config/workspace/` | ❌ 保留不动 | Agent 人格/技能 |
+| `工作区/` | ❌ 保留不动 | 用户自定义内容 |
 
 ---
 
 ## 14. 备份策略
 
-### 14.1 备份位置
+### 14.1 自动备份
 
-| 备份类型 | 存储位置 | 说明 |
-|---------|---------|------|
-| 本地备份 | `~/PocketClaw_Backup/` | 本机硬盘备份 |
-| U 盘工作目录 | U 盘中 `PocketClaw/` 目录 | 主副本 |
+在菜单中选择 **[5] 备份数据**，自动将关键文件同步到 `~/PocketClaw_Backup/`。
 
-> ⚠️ **备份不存储在 U 盘根目录，不上传 Git。**
+备份内容：`config/`、`secrets/`、`scripts/`、`docker-compose.yml`、频道凭证（可选）、会话数据（可选）。
+自动保留最近 5 个快照，旧快照自动删除。
 
 ### 14.2 备份什么
 
-需要备份的关键文件：
-- `config/openclaw.json` — 主配置
-- `config/workspace/` — Agent config/workspace和 Skills
-- `secrets/.env.encrypted` — 加密的敏感配置
-- `data/credentials/` — 频道凭证
-- `docker-compose.yml` — 容器编排配置
-- `scripts/` — 所有脚本
-
-**不需要备份的**：
-- `openclaw-src/` — 可从 GitHub 重新克隆
-- `data/sessions/` — 会话历史（可选备份）
-- `data/logs/` — 运行日志
-
-### 14.3 使用备份脚本
-
-```bash
-bash scripts/backup.sh
-# 自动将关键文件同步到 ~/PocketClaw_Backup/
-```
-
----
-
-### Q1: Docker 提示权限不足？
-
-macOS/Linux 下可能需要将当前用户加入 docker 组：
-```bash
-sudo usermod -aG docker $USER
-# 然后注销重新登录
-```
-
-### Q2: 容器启动后无法访问 WebChat？
-
-1. 检查容器状态：`docker compose ps`
-2. 查看日志：`docker compose logs pocketclaw`
-3. 确认端口未被占用：`lsof -i :18789`
-
-### Q3: API 调用返回超时？
-
-- 检查网络连接和代理设置
-- 国内模型（智谱 GLM）通常不需要代理
-- 确认 API Key 有效且余额充足
-
-### Q4: U 盘更换电脑后需要重新构建镜像吗？
-
-是的，每台新电脑首次使用时需要 `docker compose build` 构建一次镜像（约 5-10 分钟）。构建完成后，后续启动只需 `docker compose up -d`。
-
-### Q5: 如何更新 PocketClaw 版本？
-
-```bash
-cd openclaw-src
-git pull origin main
-cd ..
-docker compose build --no-cache
-docker compose up -d
-```
-
-### Q6: 忘记了加密密码怎么办？
-
-无法恢复。需要删除 `secrets/.env.encrypted`，从 `.env.example` 重新创建并重新填入所有密钥。
-**建议将加密密码记录在安全的密码管理器中。**
+| 文件/目录 | 是否备份 | 说明 |
+|-----------|---------|------|
+| `config/` | ✅ | 主配置、提供商配置 |
+| `secrets/` | ✅ | 加密密钥 |
+| `scripts/` | ✅ | 所有脚本 |
+| `docker-compose.yml` | ✅ | 容器配置 |
+| `工作区/` | ✅ | Agent 自定义 |
+| `data/sessions/` | ⚠️ 可选 | 会话历史 |
+| `data/logs/` | ❌ | 运行日志 |
 
 ---
 
 ## 15. 跨平台兼容性
 
-### 15.1 U 盘文件系统
+U 盘使用 **ExFAT** 格式，macOS / Windows / Linux 三平台无缝切换。
 
-本 U 盘使用 **ExFAT** 格式，天然支持 macOS / Windows / Linux 读写，无需额外驱动。
+| 平台 | U 盘路径 | Docker 支持 |
+|------|---------|-------------|
+| macOS (Apple Silicon / Intel) | `/Volumes/你的U盘/` | Docker Desktop（自动安装） |
+| Windows 10/11 | `E:\` 或 `F:\` | Docker Desktop + WSL2（自动安装） |
+| Ubuntu / Debian | `/media/<user>/你的U盘/` | Docker Engine |
 
-### 15.2 各平台注意事项
-
-| 平台 | U 盘挂载路径示例 | Docker 支持 | 注意事项 |
-|------|----------------|-------------|---------|
-| macOS (Apple Silicon) | `/Volumes/你的U盘/` | Docker Desktop | `host.docker.internal` 可用 |
-| macOS (Intel) | `/Volumes/你的U盘/` | Docker Desktop | 同上 |
-| Windows 10/11 | `E:\` 或 `F:\` 等 | Docker Desktop + WSL2 | 需从 WSL2 内访问 U 盘：`/mnt/e/` |
-| Ubuntu/Debian | `/media/<user>/你的U盘/` | Docker Engine | 需手动安装 Docker Compose v2 |
-| Fedora/Arch | `/run/media/<user>/你的U盘/` | Docker Engine | 同上 |
-
-### 15.3 架构兼容性
-
-Docker 镜像支持多架构（`linux/amd64` + `linux/arm64`），构建时 Docker 会自动选择匹配当前 CPU 的版本：
-- Apple Silicon Mac → `linux/arm64`
-- Intel Mac / Windows / 大多数 Linux → `linux/amd64`
+Docker 镜像支持双架构（amd64 + arm64），自动匹配 CPU。
 
 ---
 
-## 16. 参考链接
+## 16. 常见问题
+
+| 问题 | 解决方案 |
+|------|---------|
+| Docker 未安装 | 启动脚本自动安装，如失败参考使用指南手动安装部分 |
+| 首次启动很慢 | 首次需构建镜像（5-8 分钟），后续秒级启动 |
+| 无法访问聊天页 | 确认 URL 含 `#token=<Token>`，检查容器状态 |
+| API 报错 | 检查 API Key 有效性、余额，选菜单 [4] 重新配置 |
+| 忘记 Master Password | 无法恢复，需删除 `secrets/.env.encrypted` 重新配置 |
+| U 盘拔不出 | 先选菜单 [2] 停止服务，等提示后再安全弹出 |
+| 手机打不开 | 确认同一 WiFi，Windows 检查防火墙规则 |
+| 更换电脑后启动慢 | 正常，每台新电脑首次需构建镜像 |
+
+遇到复杂问题请选菜单 **[6] 自诊断修复**，自动运行 11 项检查并生成报告。
+
+---
+
+## 17. 参考链接
 
 | 资源 | 链接 |
 |------|------|
 | PocketClaw 官网 | https://pocketclaw.cn |
 | OpenClaw 官方仓库 | https://github.com/openclaw/openclaw |
-| PocketClaw 文档 | https://docs.openclaw.ai/ |
-| PocketClaw Docker 指南 | https://docs.openclaw.ai/install/docker |
 | 智谱开放平台 | https://bigmodel.cn |
+| iFlow 心流 | https://iflow.cn |
 | Docker Desktop 下载 | https://www.docker.com/products/docker-desktop/ |
 
 ---
 
-## 17. 版本信息
+## 18. 版本信息
 
-| 项目 | 版本/日期 |
-|------|----------|
-| 本方案文档版本 | v1.2.3 |
-| 创建日期 | 2026-02-25 |
-| 安全加固日期 | 2026-02-25 |
-| 远程更新功能 | 2026-02-25 |
-| 完整性校验 & 汉化 | 2026-02-26 |
-| GLM 简化 & 全自动安装 | 2026-02-26 |
-| 多频道聊天支持 | 2026-02-28 |
-| 双系统稳定性修复 | 2026-03-01 |
-| 浏览器 & OpenClaw 升级 | 2026-03-02 |
-| 手机访问 & 代码审计修复 | 2026-03-02 |
-| 版本检查 & tools.profile 修复 | 2026-03-03 |
-| Windows 版本检查 & 桌面语音移除 | 2026-03-03 |
-| 手机页面修复 & 聊天持久化 | 2026-03-03 |
-| PocketClaw 目标版本 | 2026.3.2 (latest stable) |
-| 许可证 | 本部署方案：个人使用；PocketClaw：MIT License |
+| 项目 | 值 |
+|------|---|
+| 当前版本 | v1.3.2 |
+| 更新日期 | 2026-03-09 |
+| 许可证 | 个人使用；OpenClaw: MIT License |
 
-### 17.1 v1.2.3 更新内容
-
-- [x] 修复手机页面主脚本无法加载（缺少 `</script>` 闭合标签）
-- [x] 修复 `catch {}` 语法不兼容微信 WebView（改为 `catch(e) {}`）
-- [x] 修复消息发送失败 `missing scope: operator.write`（scopes 改为 operator.admin）
-- [x] 修复 AI 回复不显示（sessionKey 匹配从严格相等改为包含匹配）
-- [x] 新增聊天记录持久化（localStorage 自动保存/恢复）
-- [x] 新增页面切换自动重连（visibilitychange + pageshow 检测）
-- [x] 不支持语音识别时自动隐藏麦克风按钮
-- [x] 调试面板默认隐藏（点击标题 3 次可打开）
-
-### 17.2 v1.2.2 更新内容
-
-- [x] 修复 Windows 版本检查失败（缺少 TLS 1.2 设置导致 HTTPS 请求被拒）
-- [x] 修复 Docker 等待计时器缺少 sleep 导致假超时
-- [x] 移除桌面端语音按钮（voice-chat.js 不再注入 control-ui）
-- [x] 手机页面 WebSocket 连接修复（等待 connect.challenge 再认证）
-
-### 17.3 v1.2.1 更新内容
-
-- [x] OpenClaw 升级至 2026.3.2（新增 PDF 工具、Telegram 流式预览、日志本地时间等）
-- [x] 修复 tools.profile 默认值变更导致新安装工具集缺失的问题
-- [x] 版本检查 API 迁移至腾讯 COS（解决 ICP 备案期间域名不可用）
-- [x] 修复启动菜单 Gateway Token 不匹配问题（macOS/Windows）
-- [x] 修复 QR 码生成失败问题（改用容器内 Python 生成）
-- [x] 修复备用启动路径未传递 GATEWAY_AUTH_PASSWORD 的问题
-
-### 17.4 v1.1.2 更新内容
-
-- [x] 手机访问修复：自动添加 Windows 防火墙规则放行 18789 端口
-- [x] 浏览器配置修复：noSandbox=true + defaultProfile=openclaw，解决 Docker 内 Chromium 无法启动
-- [x] URL 修复：change-api.bat/sh 中的控制面板地址修正为 /#token=pocketclaw
-- [x] stop.bat 安全升级：替换弃用 RNGCryptoServiceProvider，移除激进 dllhost 进程杀死
-- [x] start.sh docker run 回退修复：添加 skills 挂载 + 0.0.0.0 端口绑定
-- [x] 停止时自动清理防火墙规则（安全卸载）
-- [x] 使用指南新增手机/平板访问说明
-- [x] 添加 .gitkeep 确保空目录结构完整
-
-### 17.5 v1.1.1 更新内容
-
-- [x] OpenClaw 引擎升级至 2026.3.1（含 Docker 健康检查端点、Windows spawn 修复、中文本地化等）
-- [x] Docker 容器健康检查：利用 /health 端点自动监测容器状态
-- [x] Chromium 无头浏览器集成：内置浏览器能力，支持网页浏览和截图
-- [x] Skills 持久化：技能文件跨容器重启保留
-- [x] AGENTS.md / TOOLS.md 更新浏览器 & web_fetch 能力描述
-- [x] identity 目录预创建，修复 Docker 中 EACCES 权限问题
-- [x] Windows 启动提示优化：浏览器延迟访问友好提示
-- [x] ZIP 打包改用 Python zipfile，修复 Windows 解压中文文件名乱码
-- [x] .bat 编码全面修复：GBK + CRLF + 无 chcp 65001（防字节吞噬 bug）
-
-### 17.6 v1.1.0 更新内容
-
-- [x] 新增 10 种聊天频道支持：Telegram、Discord、Slack、WhatsApp、Signal、Google Chat、Microsoft Teams、Matrix、BlueBubbles (iMessage)、Zalo
-- [x] 新增 `setup-channels.sh` / `setup-channels.bat` 频道配置向导
-- [x] 新增 `.env.channels.example` 频道变量参考文件
-- [x] `entrypoint.sh` 重构：动态读取频道环境变量，自动生成 channels JSON 配置
-- [x] `docker-compose.yml` 新增 15 个频道相关环境变量
-- [x] `setup-env.sh` / `setup-env.bat` 末尾添加频道配置提示
-- [x] `AGENTS.md` 更新频道能力列表（3→11 种）
-- [x] README 新增第 11 章「聊天频道配置」
-- [x] `start.sh` 新增 `docker_is_ready()` 5 秒超时保护，防止 `docker info` 无限卡死
-- [x] `start.sh` 新增 .env GBK 编码清理（`LC_ALL=C tr + grep`），解决跨平台编码问题
-- [x] `start.sh` 新增幽灵容器彻底清理（按名称 + 按镜像双重过滤）
-- [x] `stop.bat` 新增 WSL shutdown + 句柄清理，解决 USB 弹出锁定问题
-- [x] `stop.sh` 新增 macOS 隐藏文件清理（.DS_Store / .Spotlight-V100 等）
-- [x] `PocketClaw.bat` 修复秒退问题（menu handler 被截断）
-- [x] AI 提示词优化：强化身份锚定、精简能力列表、防身份注入攻击
-- [x] 使用指南.txt 更新至 v1.1.0，补充频道配置说明
-- [x] 108 MacBook + 105 Windows 双系统完整测试通过
-
-### 17.7 v1.0.3 更新内容
-
-- [x] 简化为智谱 GLM-4.7-Flash 单模型（永久免费）
-- [x] Windows 全自动安装：Docker Desktop、WSL2、Git 自动检测并安装
-- [x] Docker 镜像加速器自动检测并配置（国内网络）
-- [x] 内置 Docker Desktop 安装包和 PocketClaw 源码，减少网络依赖
-- [x] UX 优化：构建进度提示、日志记录、友好错误信息
-- [x] 移除 Telegram/Email 冗余配置脚本
-- [x] 文档整合：删除 QUICKSTART_WINDOWS.md，统一使用使用指南.txt
-
-### 17.8 v1.0.2 更新内容
-
-- [x] 新增 `LICENSE.md` 开源许可证
-- [x] 新增 `verify-integrity.sh` SHA-256 完整性校验
-- [x] 全部脚本界面汉化（67+ 处英文标签改为中文）
-
-### 17.9 v1.0.1 更新内容
-
-- [x] 新增远程更新机制：`create-update.sh` 生成更新包，朋友一键安装
-- [x] 新增 `install-update.bat` / `install-update.sh` 更新安装器
-- [x] 新增 `VERSION` 版本追踪文件
-- [x] 自动扫描 U 盘位置、回滚备份、数据保护
-
-### 17.10 v1.0.0 安全加固清单
-
-- [x] 修复 openssl `-pass pass:` 密码在进程列表中泄露（所有脚本改用 `-pass stdin`）
-- [x] Windows 密码输入改用 PowerShell `SecureString` 掩码显示
-- [x] Docker 容器加固：`cap_drop: ALL` + `mem_limit` + `pids_limit` + `tmpfs noexec`
-- [x] Dockerfile.custom 添加非 root 用户支持
-- [x] 明文 .env 安全擦除：加密级随机数覆写后删除（防磁盘取证）
-- [x] 修复 `docker compose` v1/v2 检测逻辑错误
-- [x] 修复 `set -e` 导致的密码变量清理死代码
-- [x] 添加 `trap ... EXIT` 确保异常退出时清理所有敏感变量
-- [x] 修复 change-*.bat 重新加密失败时数据丢失风险
-- [x] 修复 docker compose restart 缺少 `-f` 参数
-- [x] 安全擦除升级为 `[Security.Cryptography.RandomNumberGenerator]`
-- [x] 密码随机生成改用加密级随机源
+完整版本变更记录请查看 `CHANGELOG.md`。
 
 ---
 
 > 📌 **快速开始三步走：**
-> 1. 确保电脑已安装 Docker Desktop
-> 2. 运行 `bash scripts/start.sh`
-> 3. 打开浏览器访问 `http://127.0.0.1:18789/chat`
+> 1. 把 PocketClaw 文件夹拷贝到 U 盘
+> 2. 双击 `PocketClaw.bat`（Windows）或 `PocketClaw.command`（macOS）
+> 3. 选 [1] 启动 → 按提示配置 → 开始聊天

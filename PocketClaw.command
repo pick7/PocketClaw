@@ -101,10 +101,16 @@ show_menu() {
     clear
     echo ""
     echo -e "  ${BOLD}============================================${RESET}"
-    echo -e "       ${BOLD}PocketClaw AI 助手 - 控制面板${RESET}"
+    echo -e "       ${BOLD}PocketClaw 口袋龙虾 - 控制面板${RESET}"
     echo -e "       ${CYAN}macOS / Linux 版${RESET}"
     echo -e "  ${BOLD}============================================${RESET}"
     echo ""
+    # 显示版本号
+    if [ -f "$PROJECT_DIR/VERSION" ]; then
+        local ver
+        ver=$(cat "$PROJECT_DIR/VERSION" 2>/dev/null | tr -d '\n\r')
+        echo -e "  ${CYAN}[版本] v${ver}${RESET}"
+    fi
     show_status
     echo ""
     echo "  --------------------------------------------"
