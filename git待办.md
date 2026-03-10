@@ -17,7 +17,7 @@
   - `security_opt: [no-new-privileges:true]` — 禁止容器内提权
   - `mem_limit` / `pids_limit` — 资源限制防止 DoS
   - `tmpfs` 挂载 — `/tmp`, npm 缓存等必要可写目录
-- **状态**: ⬜ 待提交
+- **状态**: ✅ 已提交 → [PR #42043](https://github.com/openclaw/openclaw/pull/42043)
 - **PR 分支**: `docs/docker-security-hardening`
 
 ### 2. Healthcheck docker-compose 示例
@@ -28,7 +28,7 @@
   - 使用 `/healthz` 端点（官方推荐的 liveness probe）
   - 合理的 interval/timeout/retries/start_period 参数
   - 示例可直接复制粘贴到用户的 compose 文件
-- **状态**: ⬜ 待提交
+- **状态**: ✅ 已提交 → [PR #42046](https://github.com/openclaw/openclaw/pull/42046)
 - **PR 分支**: `docs/docker-healthcheck-compose`
 
 ---
@@ -112,4 +112,4 @@ gh pr create --repo openclaw/openclaw \
 
 ---
 
-*最后更新: 2026-03-15*
+*最后更新: 2026-03-10*
