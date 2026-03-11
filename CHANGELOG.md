@@ -2,6 +2,20 @@
 
 All notable changes to PocketClaw will be documented in this file.
 
+## [1.3.4] - 2026-03-11
+
+### Added
+- 新增 docs/SECURITY.md 安全白皮书（14 节，涵盖威胁模型、网络隔离、凭据保护等）
+- 使用指南新增安全注意事项章节
+- README 新增安全文档链接
+
+### Fixed
+- 修复 start.bat GBK 编码损坏导致的乱码（从 git 历史恢复 + 重新编码）
+
+### Upstream Contributions
+- 提交 PR #42869: Docker 引擎启动超时守卫（docker_is_ready 函数）
+- 提交 PR #42872: .env 文件 BOM/CRLF 自动清理（sanitize_env_file 函数）
+
 ## [1.3.3] - 2026-03-11
 
 ### Fixed

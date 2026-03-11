@@ -87,6 +87,9 @@ PocketClaw/
 │
 ├── .github/workflows/                 # CI/CD 流程
 │
+├── docs/
+│   └── SECURITY.md                    # 安全白皮书（14 章详细分析）
+│
 ├── config/
 │   ├── openclaw.json                  # 主配置文件（模型、Gateway 等）
 │   ├── providers.json                 # 12 家 AI 提供商配置
@@ -119,8 +122,6 @@ PocketClaw/
 │
 └── scripts/                           # 管理脚本
     ├── _common.sh                     # 共享函数库
-    ├── _docker.sh                     # Docker 安装/镜像加速
-    ├── _build.sh                      # 镜像智能构建
     ├── _update.sh                     # 版本检查/更新
     ├── _https.sh                      # HTTPS 证书管理
     ├── start.sh / start.bat           # 启动服务
@@ -135,6 +136,7 @@ PocketClaw/
     ├── update.bat                     # Windows 版本检查+安装
     ├── reset.sh / reset.bat           # 完全重置
     ├── install-update.sh / install-update.bat  # 安装更新包
+    ├── skill-check.sh                 # Skill 文件安全扫描器
     ├── create-update.sh               # 生成更新包（维护者）
     ├── entrypoint.sh                  # 容器入口脚本
     └── gateway-patch.py               # Gateway 配置补丁
@@ -295,6 +297,8 @@ scripts\change-api.bat              # Windows
 
 ## 8. 安全策略
 
+> 完整的安全文档请参阅 [`docs/SECURITY.md`](docs/SECURITY.md)，包含 14 个章节的详细安全分析。
+
 ### 8.1 威胁模型
 
 本项目的安全设计基于以下威胁场景：
@@ -369,7 +373,7 @@ Docker 容器安全策略（docker-compose.yml 中已配置）：
 
 **Gateway Token 认证：**
 
-每次启动时自动生成随机 8 位 Token，访问地址格式：
+每次启动时自动生成随机 32 位 Token（约 190 bit 熵），访问地址格式：
 ```
 http://127.0.0.1:18789/#token=<随机Token>
 ```
@@ -403,7 +407,7 @@ history -c
        PocketClaw 口袋龙虾 - 控制面板
   ============================================
 
-  [版本] v1.3.2
+  [版本] v1.3.3
   [状态] PocketClaw 运行中
   [地址] http://127.0.0.1:18789/#token=xxx
   [手机] http://192.168.0.x:18789/mobile.html#token=xxx
@@ -702,8 +706,8 @@ Docker 镜像支持双架构（amd64 + arm64），自动匹配 CPU。
 
 | 项目 | 值 |
 |------|---|
-| 当前版本 | v1.3.2 |
-| 更新日期 | 2026-03-09 |
+| 当前版本 | v1.3.3 |
+| 更新日期 | 2026-03-11 |
 | 许可证 | 个人使用；OpenClaw: MIT License |
 
 完整版本变更记录请查看 `CHANGELOG.md`。
