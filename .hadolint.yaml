@@ -1,0 +1,4 @@
+ignored:
+  - DL3008  # apt 版本固定 — USB 便携工具需跨平台兼容，不宜固定
+  - DL3013  # pip 版本固定 — 同上，工具类库无需锁定精确版本
+  - DL3042  # pip 缓存目录 — 已使用 BuildKit cache mount，非冗余缓存
