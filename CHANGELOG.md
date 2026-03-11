@@ -2,6 +2,28 @@
 
 All notable changes to PocketClaw will be documented in this file.
 
+## [1.3.3] - 2026-03-11
+
+### Fixed
+- 修复国内无 VPN 用户首次构建镜像卡住 1 小时以上的问题
+- Dockerfile: pip 添加阿里云镜像源加速
+- Dockerfile: npm 不再优先尝试官方源（直接用淘宝镜像）
+- Dockerfile: apt 镜像源替换逻辑更健壮（区分 DEB822/传统格式）
+- 构建流程: 预拉基础镜像增加 120 秒超时 + 阿里云容器镜像兜底
+- 预构建镜像拉取增加 60 秒超时保护
+- Docker 镜像加速器列表新增腾讯云镜像源
+
+### Security
+- setup.html: innerHTML → DOM API 防 XSS + CSP 头
+- mobile.html: renderMd 链接 XSS 加固（URL 构造器 + 属性转义）
+- gateway-patch.py: 路径遍历防护 + 可疑请求日志
+- Dockerfile: chmod a+w → u+w 最小权限
+- docker-compose.yml: 端口绑定可配置 BIND_IP 环境变量
+- doctor.sh: echo $VAR → printf 防变量注入
+- start.sh: brew shellenv 安全改进
+- build_zip.py: 文件读取异常处理
+- Docker 基础镜像版本锁定 node:22.16-slim
+
 ## [1.3.2] - 2026-03-09
 
 ### Added

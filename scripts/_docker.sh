@@ -99,11 +99,11 @@ import json
 try:
     cfg = json.load(open('$DAEMON_JSON'))
 except: cfg = {}
-cfg['registry-mirrors'] = ['https://docker.1ms.run','https://docker.xuanyuan.me']
+cfg['registry-mirrors'] = ['https://docker.1ms.run','https://docker.xuanyuan.me','https://mirror.ccs.tencentyun.com']
 json.dump(cfg, open('$DAEMON_JSON','w'), indent=2)
 "
     else
-        echo '{"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me"]}' > "$DAEMON_JSON"
+        echo '{"registry-mirrors":["https://docker.1ms.run","https://docker.xuanyuan.me","https://mirror.ccs.tencentyun.com"]}' > "$DAEMON_JSON"
     fi
     echo "[OK] 镜像加速器已配置"
 

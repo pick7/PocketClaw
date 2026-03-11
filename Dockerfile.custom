@@ -10,8 +10,12 @@ LABEL maintainer="PocketClaw" \
 WORKDIR /app
 
 # 使用国内 Debian 镜像源（解决 deb.debian.org 在国内不稳定的问题）
-RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
-    sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true
+# bookworm 使用 DEB822 格式 (sources.list.d/)，旧版用传统格式 (sources.list)
+RUN if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources; \
+    elif [ -f /etc/apt/sources.list ]; then \
+        sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list; \
+    fi
 
 # 安装系统依赖（最小化安装，减少攻击面）+ P2: BuildKit 缓存挂载
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -31,9 +35,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     python3-venv \
     && ln -sf /usr/bin/python3 /usr/bin/python
 
-# 安装 Python 文件处理库（支持 Word/PDF/Excel 读写）+ P2: pip 缓存挂载
+# 安装 Python 文件处理库（支持 Word/PDF/Excel 读写）+ pip 缓存挂载
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip3 install --no-cache-dir --break-system-packages \
+    pip3 install --break-system-packages \
+    -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com \
     python-docx \
     pdfplumber \
     openpyxl \
@@ -63,13 +68,11 @@ RUN git config --global url.https://github.com/.insteadOf ssh://git@github.com/ 
 # docker compose build --build-arg CACHE_DATE=$(date +%s)
 ARG CACHE_DATE=0
 
-# 优先从官方 npm 安装（获取最新版），失败则回退到国内镜像 + P2: npm 缓存挂载
+# 安装 OpenClaw（使用淘宝 npm 镜像加速，国内网络友好）
 RUN --mount=type=cache,target=/root/.npm \
     npm config set registry https://registry.npmmirror.com && \
-    (npm install -g openclaw@latest --registry https://registry.npmjs.org 2>/dev/null || \
-     npm install -g openclaw@latest) && \
-    (npm install -g clawhub@latest --registry https://registry.npmjs.org 2>/dev/null || \
-     npm install -g clawhub@latest 2>/dev/null || true)
+    npm install -g openclaw@latest && \
+    (npm install -g clawhub@latest 2>/dev/null || true)
 
 # 复制 VERSION（放在 npm install 之后，避免版本号变更时重新下载 openclaw）
 COPY VERSION /tmp/POCKETCLAW_VERSION

@@ -43,17 +43,37 @@ smart_build() {
         fi
     fi
 
-    # 尝试从 Docker Hub 拉取预构建镜像
+    # 尝试从 Docker Hub 拉取预构建镜像（30秒超时，避免国内网络卡住）
     if [ "$NEED_BUILD" -eq 1 ]; then
         local DOCKER_IMAGE="pocketclaw/pocketclaw:latest"
         echo "[5/7] 尝试拉取预构建镜像..."
-        if docker pull "$DOCKER_IMAGE" >> "$BUILD_LOG" 2>&1; then
+        if timeout 60 docker pull "$DOCKER_IMAGE" >> "$BUILD_LOG" 2>&1; then
             docker tag "$DOCKER_IMAGE" pocketclaw-pocketclaw:latest >> "$BUILD_LOG" 2>&1
             NEED_BUILD=0
             echo "[OK] 预构建镜像拉取成功，跳过本地构建"
             [ -n "$CURRENT_HASH" ] && echo "$CURRENT_HASH" > "$BUILD_HASH_FILE"
         else
             echo "[信息] 预构建镜像不可用，将进行本地构建"
+        fi
+    fi
+
+    # 本地构建前，预拉基础镜像（通过镜像加速器，避免构建时卡住）
+    if [ "$NEED_BUILD" -eq 1 ]; then
+        local BASE_IMAGE
+        BASE_IMAGE=$(grep -m1 '^FROM ' "$PROJECT_DIR/Dockerfile.custom" 2>/dev/null | awk '{print $2}')
+        if [ -n "$BASE_IMAGE" ] && ! docker image inspect "$BASE_IMAGE" &>/dev/null 2>&1; then
+            echo "[信息] 预拉基础镜像 $BASE_IMAGE ..."
+            if ! timeout 120 docker pull "$BASE_IMAGE" >> "$BUILD_LOG" 2>&1; then
+                # 镜像加速器可能失效，尝试阿里云官方镜像
+                local ALI_IMAGE="registry.cn-hangzhou.aliyuncs.com/library/${BASE_IMAGE}"
+                echo "[信息] Docker Hub 拉取超时，尝试阿里云镜像..."
+                if timeout 120 docker pull "$ALI_IMAGE" >> "$BUILD_LOG" 2>&1; then
+                    docker tag "$ALI_IMAGE" "$BASE_IMAGE" >> "$BUILD_LOG" 2>&1
+                    echo "[OK] 通过阿里云镜像获取基础镜像成功"
+                else
+                    echo "[警告] 基础镜像拉取失败，构建可能很慢"
+                fi
+            fi
         fi
     fi
 
