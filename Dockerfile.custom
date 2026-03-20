@@ -62,7 +62,8 @@ ENV NODE_ENV=production
 # 安装 OpenClaw（使用淘宝 npm 镜像加速）
 # 将 git SSH 协议替换为 HTTPS（容器内无 GitHub SSH 密钥）
 RUN git config --global url.https://github.com/.insteadOf ssh://git@github.com/ \
-    && git config --global url.https://github.com/.insteadOf git@github.com:
+    && git config --global --add url.https://github.com/.insteadOf git@github.com: \
+    && git config --global --add url.https://github.com/.insteadOf ssh://git@github.com
 
 # 手动缓存破坏（仅在需要升级 OpenClaw 时使用）:
 # docker compose build --build-arg CACHE_DATE=$(date +%s)

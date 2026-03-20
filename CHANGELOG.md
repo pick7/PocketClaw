@@ -2,6 +2,17 @@
 
 All notable changes to PocketClaw will be documented in this file.
 
+## [1.3.5] - 2026-03-20
+
+### Changed
+- OpenClaw 升级到 2026.3.13（release tag: `v2026.3.13-1`，npm 版本仍为 `2026.3.13`）
+- 同步上游 2026.3.11 / 2026.3.12 / 2026.3.13 的关键修复（含安全与稳定性更新）
+
+### Fixed
+- 修复与 OpenClaw 2026.3.13 严格配置校验的兼容问题：移除 `gateway.controlUi._comment` 非法键
+- 修复新版依赖拉取兼容问题：完善 git `ssh://git@github.com` → HTTPS 改写规则，避免无 SSH 密钥环境构建失败
+- 更新 `docker-compose.yml` 中 OpenClaw 内置健康检查注释版本到 2026.3.13
+
 ## [1.3.4] - 2026-03-11
 
 ### Added
